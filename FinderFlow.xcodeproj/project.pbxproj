@@ -1,0 +1,528 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AAAAAAAAAAAAAAAAAAAA0020 /* FinderFlowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAAAAAAAAAAAAAA0010 /* FinderFlowApp.swift */; };
+		AAAAAAAAAAAAAAAAAAAA0021 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAAAAAAAAAAAAAA0011 /* ContentView.swift */; };
+		AAAAAAAAAAAAAAAAAAAA0022 /* PathBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAAAAAAAAAAAAAA0012 /* PathBarView.swift */; };
+		AAAAAAAAAAAAAAAAAAAA0023 /* SearchScopeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAAAAAAAAAAAAAA0013 /* SearchScopeView.swift */; };
+		AAAAAAAAAAAAAAAAAAAA0024 /* QuickActionsToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAAAAAAAAAAAAAA0014 /* QuickActionsToolbar.swift */; };
+		AAAAAAAAAAAAAAAAAAAA0025 /* FolderCreationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAAAAAAAAAAAAAA0015 /* FolderCreationService.swift */; };
+		AAAAAAAAAAAAAAAAAAAA0026 /* SearchEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAAAAAAAAAAAAAA0016 /* SearchEngine.swift */; };
+		AAAAAAAAAAAAAAAAAAAA0027 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAAAAAAAAAAAAAAAAAAA0018 /* Assets.xcassets */; };
+		AAAAAAAAAAAAAAAAAAAA0028 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAAAAAAAAAAAAAA001A /* SidebarView.swift */; };
+		AAAAAAAAAAAAAAAAAAAA0050 /* FinderSyncExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAAAAAAAAAAAAAA0040 /* FinderSyncExtension.swift */; };
+		AAAAAAAAAAAAAAAAAAAA0062 /* FinderFlowExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AAAAAAAAAAAAAAAAAAAA0042 /* FinderFlowExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AAAAAAAAAAAAAAAAAAAA0071 /* FinderSync.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AAAAAAAAAAAAAAAAAAAA0070 /* FinderSync.framework */; };
+		BBBBBBBBBBBBBBBBBBBB0002 /* FileItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBBBBBBBBBBBBBB0001 /* FileItem.swift */; };
+		BBBBBBBBBBBBBBBBBBBB0004 /* ListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBBBBBBBBBBBBBB0003 /* ListView.swift */; };
+		BBBBBBBBBBBBBBBBBBBB0006 /* IconsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBBBBBBBBBBBBBB0005 /* IconsView.swift */; };
+		BBBBBBBBBBBBBBBBBBBB0008 /* ColumnsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBBBBBBBBBBBBBB0007 /* ColumnsView.swift */; };
+		BBBBBBBBBBBBBBBBBBBB000A /* StatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBBBBBBBBBBBBBB0009 /* StatusBarView.swift */; };
+		CCCCCCCCCCCCCCCCCCCC0002 /* MarkdownReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCCCCCCCCCCCCCCCCCCC0001 /* MarkdownReaderView.swift */; };
+		CCCCCCCCCCCCCCCCCCCC0004 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCCCCCCCCCCCCCCCCCCC0003 /* SettingsView.swift */; };
+		CCCCCCCCCCCCCCCCCCCC0006 /* CodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCCCCCCCCCCCCCCCCCCC0005 /* CodeEditorView.swift */; };
+		DDDDDDDDDDDDDDDDDDDD0002 /* AceEditor in Resources */ = {isa = PBXBuildFile; fileRef = DDDDDDDDDDDDDDDDDDDD0001 /* AceEditor */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		AAAAAAAAAAAAAAAAAAAA0060 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AAAAAAAAAAAAAAAAAAAA0001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AAAAAAAAAAAAAAAAAAAA0030;
+			remoteInfo = FinderFlowExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AAAAAAAAAAAAAAAAAAAA0037 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AAAAAAAAAAAAAAAAAAAA0062 /* FinderFlowExtension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		AAAAAAAAAAAAAAAAAAAA000F /* FinderFlow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FinderFlow.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AAAAAAAAAAAAAAAAAAAA0010 /* FinderFlowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinderFlowApp.swift; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAA0011 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAA0012 /* PathBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathBarView.swift; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAA0013 /* SearchScopeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchScopeView.swift; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAA0014 /* QuickActionsToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActionsToolbar.swift; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAA0015 /* FolderCreationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderCreationService.swift; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAA0016 /* SearchEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchEngine.swift; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAA001A /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAA0017 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAA0018 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAA001B /* FinderFlow.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FinderFlow.entitlements; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAA0040 /* FinderSyncExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinderSyncExtension.swift; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAA0041 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAA001C /* FinderFlowExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FinderFlowExtension.entitlements; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAA0042 /* FinderFlowExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FinderFlowExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AAAAAAAAAAAAAAAAAAAA0070 /* FinderSync.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FinderSync.framework; path = System/Library/Frameworks/FinderSync.framework; sourceTree = SDKROOT; };
+		BBBBBBBBBBBBBBBBBBBB0001 /* FileItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileItem.swift; sourceTree = "<group>"; };
+		BBBBBBBBBBBBBBBBBBBB0003 /* ListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListView.swift; sourceTree = "<group>"; };
+		BBBBBBBBBBBBBBBBBBBB0005 /* IconsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconsView.swift; sourceTree = "<group>"; };
+		BBBBBBBBBBBBBBBBBBBB0007 /* ColumnsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColumnsView.swift; sourceTree = "<group>"; };
+		BBBBBBBBBBBBBBBBBBBB0009 /* StatusBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarView.swift; sourceTree = "<group>"; };
+		CCCCCCCCCCCCCCCCCCCC0001 /* MarkdownReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownReaderView.swift; sourceTree = "<group>"; };
+		CCCCCCCCCCCCCCCCCCCC0003 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		CCCCCCCCCCCCCCCCCCCC0005 /* CodeEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEditorView.swift; sourceTree = "<group>"; };
+		DDDDDDDDDDDDDDDDDDDD0001 /* AceEditor */ = {isa = PBXFileReference; lastKnownFileType = folder; path = AceEditor; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AAAAAAAAAAAAAAAAAAAA000B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AAAAAAAAAAAAAAAAAAAA0036 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AAAAAAAAAAAAAAAAAAAA0071 /* FinderSync.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AAAAAAAAAAAAAAAAAAAA000C /* FinderFlow */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAAAAAAAAAAAAAAA000E /* FinderFlow */,
+				AAAAAAAAAAAAAAAAAAAA006F /* FinderFlowExtension */,
+				AAAAAAAAAAAAAAAAAAAA0072 /* Frameworks */,
+				AAAAAAAAAAAAAAAAAAAA000D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AAAAAAAAAAAAAAAAAAAA000D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAAAAAAAAAAAAAAA000F /* FinderFlow.app */,
+				AAAAAAAAAAAAAAAAAAAA0042 /* FinderFlowExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AAAAAAAAAAAAAAAAAAAA000E /* FinderFlow */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAAAAAAAAAAAAAAA0010 /* FinderFlowApp.swift */,
+				AAAAAAAAAAAAAAAAAAAA0011 /* ContentView.swift */,
+				AAAAAAAAAAAAAAAAAAAA0012 /* PathBarView.swift */,
+				AAAAAAAAAAAAAAAAAAAA0013 /* SearchScopeView.swift */,
+				AAAAAAAAAAAAAAAAAAAA0014 /* QuickActionsToolbar.swift */,
+				AAAAAAAAAAAAAAAAAAAA0015 /* FolderCreationService.swift */,
+				AAAAAAAAAAAAAAAAAAAA0016 /* SearchEngine.swift */,
+				AAAAAAAAAAAAAAAAAAAA001A /* SidebarView.swift */,
+				AAAAAAAAAAAAAAAAAAAA0017 /* Info.plist */,
+				AAAAAAAAAAAAAAAAAAAA0018 /* Assets.xcassets */,
+				AAAAAAAAAAAAAAAAAAAA001B /* FinderFlow.entitlements */,
+				BBBBBBBBBBBBBBBBBBBB0001 /* FileItem.swift */,
+				BBBBBBBBBBBBBBBBBBBB0003 /* ListView.swift */,
+				BBBBBBBBBBBBBBBBBBBB0005 /* IconsView.swift */,
+				BBBBBBBBBBBBBBBBBBBB0007 /* ColumnsView.swift */,
+				BBBBBBBBBBBBBBBBBBBB0009 /* StatusBarView.swift */,
+				CCCCCCCCCCCCCCCCCCCC0001 /* MarkdownReaderView.swift */,
+				CCCCCCCCCCCCCCCCCCCC0003 /* SettingsView.swift */,
+				CCCCCCCCCCCCCCCCCCCC0005 /* CodeEditorView.swift */,
+				DDDDDDDDDDDDDDDDDDDD0001 /* AceEditor */,
+			);
+			path = FinderFlow;
+			sourceTree = "<group>";
+		};
+		AAAAAAAAAAAAAAAAAAAA006F /* FinderFlowExtension */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAAAAAAAAAAAAAAA0040 /* FinderSyncExtension.swift */,
+				AAAAAAAAAAAAAAAAAAAA0041 /* Info.plist */,
+				AAAAAAAAAAAAAAAAAAAA001C /* FinderFlowExtension.entitlements */,
+			);
+			path = FinderFlowExtension;
+			sourceTree = "<group>";
+		};
+		AAAAAAAAAAAAAAAAAAAA0072 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAAAAAAAAAAAAAAA0070 /* FinderSync.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AAAAAAAAAAAAAAAAAAAA0002 /* FinderFlow */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AAAAAAAAAAAAAAAAAAAA0006 /* Build configuration list for PBXNativeTarget "FinderFlow" */;
+			buildPhases = (
+				AAAAAAAAAAAAAAAAAAAA0009 /* Sources */,
+				AAAAAAAAAAAAAAAAAAAA000A /* Resources */,
+				AAAAAAAAAAAAAAAAAAAA000B /* Frameworks */,
+				AAAAAAAAAAAAAAAAAAAA0037 /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AAAAAAAAAAAAAAAAAAAA0061 /* PBXTargetDependency */,
+			);
+			name = FinderFlow;
+			productName = FinderFlow;
+			productReference = AAAAAAAAAAAAAAAAAAAA000F /* FinderFlow.app */;
+			productType = "com.apple.product-type.application";
+		};
+		AAAAAAAAAAAAAAAAAAAA0030 /* FinderFlowExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AAAAAAAAAAAAAAAAAAAA0031 /* Build configuration list for PBXNativeTarget "FinderFlowExtension" */;
+			buildPhases = (
+				AAAAAAAAAAAAAAAAAAAA0034 /* Sources */,
+				AAAAAAAAAAAAAAAAAAAA0035 /* Resources */,
+				AAAAAAAAAAAAAAAAAAAA0036 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FinderFlowExtension;
+			productName = FinderFlowExtension;
+			productReference = AAAAAAAAAAAAAAAAAAAA0042 /* FinderFlowExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AAAAAAAAAAAAAAAAAAAA0001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1620;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					AAAAAAAAAAAAAAAAAAAA0002 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+					AAAAAAAAAAAAAAAAAAAA0030 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+				};
+			};
+			buildConfigurationList = AAAAAAAAAAAAAAAAAAAA0003 /* Build configuration list for PBXProject "FinderFlow" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AAAAAAAAAAAAAAAAAAAA000C;
+			productRefGroup = AAAAAAAAAAAAAAAAAAAA000D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AAAAAAAAAAAAAAAAAAAA0002 /* FinderFlow */,
+				AAAAAAAAAAAAAAAAAAAA0030 /* FinderFlowExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AAAAAAAAAAAAAAAAAAAA000A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AAAAAAAAAAAAAAAAAAAA0027 /* Assets.xcassets in Resources */,
+				DDDDDDDDDDDDDDDDDDDD0002 /* AceEditor in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AAAAAAAAAAAAAAAAAAAA0035 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AAAAAAAAAAAAAAAAAAAA0009 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AAAAAAAAAAAAAAAAAAAA0020 /* FinderFlowApp.swift in Sources */,
+				AAAAAAAAAAAAAAAAAAAA0021 /* ContentView.swift in Sources */,
+				AAAAAAAAAAAAAAAAAAAA0022 /* PathBarView.swift in Sources */,
+				AAAAAAAAAAAAAAAAAAAA0023 /* SearchScopeView.swift in Sources */,
+				AAAAAAAAAAAAAAAAAAAA0024 /* QuickActionsToolbar.swift in Sources */,
+				AAAAAAAAAAAAAAAAAAAA0025 /* FolderCreationService.swift in Sources */,
+				AAAAAAAAAAAAAAAAAAAA0026 /* SearchEngine.swift in Sources */,
+				AAAAAAAAAAAAAAAAAAAA0028 /* SidebarView.swift in Sources */,
+				BBBBBBBBBBBBBBBBBBBB0002 /* FileItem.swift in Sources */,
+				BBBBBBBBBBBBBBBBBBBB0004 /* ListView.swift in Sources */,
+				BBBBBBBBBBBBBBBBBBBB0006 /* IconsView.swift in Sources */,
+				BBBBBBBBBBBBBBBBBBBB0008 /* ColumnsView.swift in Sources */,
+				BBBBBBBBBBBBBBBBBBBB000A /* StatusBarView.swift in Sources */,
+				CCCCCCCCCCCCCCCCCCCC0002 /* MarkdownReaderView.swift in Sources */,
+				CCCCCCCCCCCCCCCCCCCC0004 /* SettingsView.swift in Sources */,
+				CCCCCCCCCCCCCCCCCCCC0006 /* CodeEditorView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AAAAAAAAAAAAAAAAAAAA0034 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AAAAAAAAAAAAAAAAAAAA0050 /* FinderSyncExtension.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AAAAAAAAAAAAAAAAAAAA0061 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AAAAAAAAAAAAAAAAAAAA0030 /* FinderFlowExtension */;
+			targetProxy = AAAAAAAAAAAAAAAAAAAA0060 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		AAAAAAAAAAAAAAAAAAAA0004 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_CYCLE = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AAAAAAAAAAAAAAAAAAAA0005 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_CYCLE = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		AAAAAAAAAAAAAAAAAAAA0007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FinderFlow/FinderFlow.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = FinderFlow/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finderflow.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		AAAAAAAAAAAAAAAAAAAA0008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FinderFlow/FinderFlow.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = FinderFlow/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finderflow.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		AAAAAAAAAAAAAAAAAAAA0032 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = FinderFlowExtension/FinderFlowExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = FinderFlowExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finderflow.app.extension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		AAAAAAAAAAAAAAAAAAAA0033 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = FinderFlowExtension/FinderFlowExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = FinderFlowExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finderflow.app.extension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AAAAAAAAAAAAAAAAAAAA0003 /* Build configuration list for PBXProject "FinderFlow" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AAAAAAAAAAAAAAAAAAAA0004 /* Debug */,
+				AAAAAAAAAAAAAAAAAAAA0005 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AAAAAAAAAAAAAAAAAAAA0006 /* Build configuration list for PBXNativeTarget "FinderFlow" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AAAAAAAAAAAAAAAAAAAA0007 /* Debug */,
+				AAAAAAAAAAAAAAAAAAAA0008 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AAAAAAAAAAAAAAAAAAAA0031 /* Build configuration list for PBXNativeTarget "FinderFlowExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AAAAAAAAAAAAAAAAAAAA0032 /* Debug */,
+				AAAAAAAAAAAAAAAAAAAA0033 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AAAAAAAAAAAAAAAAAAAA0001 /* Project object */;
+}

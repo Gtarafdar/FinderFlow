@@ -1,0 +1,259 @@
+import Foundation
+import AppKit
+import SwiftUI
+
+// MARK: - Date category (for grouping)
+
+enum DateCategory: String, CaseIterable {
+    case today       = "Today"
+    case yesterday   = "Yesterday"
+    case thisWeek    = "Previous 7 Days"
+    case thisMonth   = "Previous 30 Days"
+    case older       = "Earlier"
+
+    static func of(_ date: Date) -> DateCategory {
+        let cal = Calendar.current
+        let now = Date()
+        if cal.isDateInToday(date)     { return .today }
+        if cal.isDateInYesterday(date) { return .yesterday }
+        let days = cal.dateComponents([.day], from: date, to: now).day ?? 0
+        if days <= 7  { return .thisWeek }
+        if days <= 30 { return .thisMonth }
+        return .older
+    }
+}
+
+// MARK: - FileItem
+
+struct FileItem: Identifiable, Hashable {
+    let id           = UUID()
+    let url:           URL
+    let name:          String
+    let isDirectory:   Bool
+    let isHidden:      Bool
+    let size:          Int64
+    let dateModified:  Date
+    let dateCreated:   Date
+    let kind:          String
+    let fileExtension: String
+
+    let labelNumber: Int
+    let tagNames:    [String]   // macOS modern tags (multiple per file)
+
+    static let resourceKeys: [URLResourceKey] = [
+        .isDirectoryKey, .fileSizeKey, .contentModificationDateKey,
+        .creationDateKey, .localizedTypeDescriptionKey, .isHiddenKey,
+        .labelNumberKey, .tagNamesKey,
+    ]
+
+    static func load(from url: URL) -> FileItem? {
+        guard let v = try? url.resourceValues(forKeys: Set(resourceKeys)) else { return nil }
+        return FileItem(
+            url:           url,
+            name:          url.lastPathComponent,
+            isDirectory:   v.isDirectory ?? false,
+            isHidden:      v.isHidden ?? false,
+            size:          Int64(v.fileSize ?? 0),
+            dateModified:  v.contentModificationDate ?? .distantPast,
+            dateCreated:   v.creationDate ?? .distantPast,
+            kind:          v.localizedTypeDescription ?? (v.isDirectory == true ? "Folder" : "File"),
+            fileExtension: url.pathExtension.lowercased(),
+            labelNumber:   v.labelNumber ?? 0,
+            tagNames:      v.tagNames ?? []
+        )
+    }
+
+    // Icon with NSCache — safe, thread-checked, and limits RAM to ~500 entries
+    var icon: NSImage {
+        let key = url.path as NSString
+        if let hit = FileItem.iconCache.object(forKey: key) { return hit }
+        let img = NSWorkspace.shared.icon(forFile: url.path)
+        img.size = NSSize(width: 32, height: 32)   // cap RAM per image
+        FileItem.iconCache.setObject(img, forKey: key)
+        return img
+    }
+
+    private static let iconCache: NSCache<NSString, NSImage> = {
+        let c = NSCache<NSString, NSImage>()
+        c.countLimit = 300         // ~9 MB max at 32×32; NSCache evicts under memory pressure
+        c.totalCostLimit = 10 * 1024 * 1024  // 10 MB hard cap
+        return c
+    }()
+
+    static func clearIconCache() { iconCache.removeAllObjects() }
+
+    // Convenience
+    var formattedSize: String {
+        isDirectory ? "—" : ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
+    }
+    var formattedDateModified: String { Self.fmt.string(from: dateModified) }
+    var formattedDateCreated:  String { Self.fmt.string(from: dateCreated) }
+
+    var dateCategory: DateCategory { DateCategory.of(dateModified) }
+
+    // All tag colors for this item — uses modern tagNames first (multiple colors
+    // per file), falls back to the legacy labelNumber if tagNames is empty.
+    var tagColors: [Color] {
+        let fromNames = tagNames.compactMap { FileItem.colorForTagName($0) }
+        if !fromNames.isEmpty { return fromNames }
+        return FileItem.colorForLabelNumber(labelNumber).map { [$0] } ?? []
+    }
+
+    // Single-color convenience kept for backward compat.
+    var tagColor: Color? { tagColors.first }
+
+    // macOS Finder exact system tag colors (matches Tag preferences in Finder).
+    static func colorForTagName(_ name: String) -> Color? {
+        switch name.lowercased() {
+        case "red":          return Color(red: 1.00, green: 0.23, blue: 0.19)
+        case "orange":       return Color(red: 1.00, green: 0.58, blue: 0.00)
+        case "yellow":       return Color(red: 1.00, green: 0.80, blue: 0.00)
+        case "green":        return Color(red: 0.20, green: 0.78, blue: 0.35)
+        case "blue":         return Color(red: 0.00, green: 0.48, blue: 1.00)
+        case "purple":       return Color(red: 0.69, green: 0.32, blue: 0.87)
+        case "gray", "grey": return Color(nsColor: .systemGray)
+        default:             return nil   // custom tag with no standard color
+        }
+    }
+
+    static func colorForLabelNumber(_ n: Int) -> Color? {
+        switch n {
+        case 1: return Color(nsColor: .systemGray)
+        case 2: return Color(red: 0.20, green: 0.78, blue: 0.35)
+        case 3: return Color(red: 0.69, green: 0.32, blue: 0.87)
+        case 4: return Color(red: 0.00, green: 0.48, blue: 1.00)
+        case 5: return Color(red: 1.00, green: 0.80, blue: 0.00)
+        case 6: return Color(red: 1.00, green: 0.23, blue: 0.19)
+        case 7: return Color(red: 1.00, green: 0.58, blue: 0.00)
+        default: return nil
+        }
+    }
+
+    // Standard color name → label number, mirrors macOS Finder.
+    static let colorNameToLabel: [String: Int] = [
+        "gray": 1, "green": 2, "purple": 3, "blue": 4,
+        "yellow": 5, "red": 6, "orange": 7
+    ]
+    static let labelToColorName: [Int: String] = [
+        1: "Gray", 2: "Green", 3: "Purple", 4: "Blue",
+        5: "Yellow", 6: "Red", 7: "Orange"
+    ]
+
+    // Order the 7 standard colors are presented in the Tags menu (matches Finder).
+    static let colorMenuOrder = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Gray"]
+
+    // True when this item carries the given standard color tag (case-insensitive).
+    func hasColorTag(_ name: String) -> Bool {
+        tagNames.contains { $0.localizedCaseInsensitiveCompare(name) == .orderedSame }
+    }
+
+    var isArchive: Bool {
+        ["zip","tar","gz","tgz","bz2","xz","7z","rar","pkg","dmg"].contains(fileExtension)
+    }
+
+    private static let fmt: DateFormatter = {
+        let f = DateFormatter(); f.dateStyle = .medium; f.timeStyle = .short; return f
+    }()
+
+    static func == (lhs: FileItem, rhs: FileItem) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+}
+
+// MARK: - Tag dot(s) view — matches macOS Finder's colored-circle appearance
+
+struct TagDotsView: View {
+    let colors: [Color]
+    var size: CGFloat = 10
+
+    var body: some View {
+        if !colors.isEmpty {
+            HStack(spacing: 2) {
+                ForEach(Array(colors.enumerated()), id: \.offset) { _, color in
+                    Circle()
+                        .fill(color)
+                        .frame(width: size, height: size)
+                        .overlay(
+                            Circle().strokeBorder(color.opacity(0.4), lineWidth: 0.5)
+                        )
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Tags submenu (shared by list / grouped / icons / columns)
+//
+// Renders the 7 Finder colors as toggles (a checkmark shows when EVERY targeted
+// item already carries that color) plus a "Clear Tags" action. Toggling adds the
+// color when absent and removes it when present — exactly like Finder, and with
+// multiple colors per file preserved.
+
+struct TagMenuContent: View {
+    let targets: [FileItem]
+    @ObservedObject var fileOps: FileOperationsService
+    let onReload: () -> Void
+
+    private var urls: [URL] { targets.map(\.url) }
+
+    private func applied(_ color: String) -> Bool {
+        !targets.isEmpty && targets.allSatisfy { $0.hasColorTag(color) }
+    }
+
+    var body: some View {
+        ForEach(FileItem.colorMenuOrder, id: \.self) { color in
+            Toggle(color, isOn: Binding(
+                get: { applied(color) },
+                set: { _ in fileOps.toggleColorTag(color, on: urls, reload: onReload) }
+            ))
+        }
+        Divider()
+        Button("Clear Tags") { fileOps.clearTags(on: urls, reload: onReload) }
+            .disabled(targets.allSatisfy { $0.tagNames.isEmpty })
+    }
+}
+
+// MARK: - Sort
+
+enum SortField: String, CaseIterable, Identifiable {
+    case name         = "Name"
+    case dateModified = "Date Modified"
+    case dateCreated  = "Date Created"
+    case size         = "Size"
+    case kind         = "Kind"
+    case ext          = "Extension"
+    var id: String { rawValue }
+}
+
+enum ViewMode: String, CaseIterable {
+    case list, icons, columns
+    var icon: String {
+        switch self {
+        case .list:    "list.bullet"
+        case .icons:   "square.grid.2x2"
+        case .columns: "rectangle.split.3x1"
+        }
+    }
+}
+
+func sortedItems(_ items: [FileItem], by field: SortField, ascending: Bool) -> [FileItem] {
+    items.sorted { a, b in
+        if a.isDirectory != b.isDirectory { return a.isDirectory }
+        let r: Bool
+        switch field {
+        case .name:         r = a.name.localizedCompare(b.name) == .orderedAscending
+        case .dateModified: r = a.dateModified < b.dateModified
+        case .dateCreated:  r = a.dateCreated  < b.dateCreated
+        case .size:         r = a.size < b.size
+        case .kind:         r = a.kind.localizedCompare(b.kind) == .orderedAscending
+        case .ext:          r = a.fileExtension.localizedCompare(b.fileExtension) == .orderedAscending
+        }
+        return ascending ? r : !r
+    }
+}
+
+func loadItems(at url: URL, showHidden: Bool) -> [FileItem] {
+    let opts: FileManager.DirectoryEnumerationOptions = showHidden ? [] : [.skipsHiddenFiles]
+    return (try? FileManager.default.contentsOfDirectory(
+        at: url, includingPropertiesForKeys: FileItem.resourceKeys, options: opts
+    ))?.compactMap { FileItem.load(from: $0) } ?? []
+}

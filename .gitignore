@@ -1,0 +1,21 @@
+# Build output / release artifacts
+build/
+DerivedData/
+*.dmg
+*.app
+
+# Xcode
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+.DS_Store
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Misc
+*.moved-aside
+*.hmap
+*.ipa

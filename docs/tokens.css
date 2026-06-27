@@ -1,0 +1,67 @@
+/* Hallmark · tokens.css — FinderFlow landing
+ * macrostructure: Workbench · theme: custom (deep-ink · indigo accent · coral)
+ * paper-band: dark · display-style: geometric-sans · accent-hue: cool(indigo)
+ */
+:root {
+  /* paper / surfaces */
+  --color-paper:    oklch(15% 0.018 265);
+  --color-paper-2:  oklch(19% 0.022 265);
+  --color-paper-3:  oklch(23% 0.026 265);
+  --color-line:     oklch(32% 0.02 265);
+  --color-line-2:   oklch(40% 0.02 265);
+
+  /* ink */
+  --color-ink:      oklch(97% 0.004 265);
+  --color-ink-2:    oklch(80% 0.012 265);
+  --color-muted:    oklch(66% 0.018 265);
+
+  /* accents (the app's real brand colours) */
+  --color-accent:    oklch(56% 0.19 264);   /* indigo  ~ #2D52E0 */
+  --color-accent-ink: oklch(98% 0.01 264);
+  --color-coral:     oklch(72% 0.17 30);    /* coral   ~ #FF6B5C */
+  --color-green:     oklch(72% 0.16 150);
+  --color-focus:     oklch(80% 0.13 264);
+
+  /* type */
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-body:    "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --text-xs:   0.78rem;
+  --text-sm:   0.9rem;
+  --text-base: 1rem;
+  --text-lg:   1.18rem;
+  --text-xl:   1.45rem;
+  --text-2xl:  1.9rem;
+  --text-3xl:  2.5rem;
+  --text-4xl:  3.4rem;
+  --text-display-s: 4rem;
+  --text-display:   5.2rem;
+
+  /* space (4pt) */
+  --space-2:  0.25rem;
+  --space-4:  0.5rem;
+  --space-6:  0.75rem;
+  --space-8:  1rem;
+  --space-12: 1.5rem;
+  --space-16: 2rem;
+  --space-24: 3rem;
+  --space-32: 4rem;
+  --space-48: 6rem;
+  --space-64: 8rem;
+
+  /* radius / rule / motion */
+  --radius-sm: 8px;
+  --radius:    14px;
+  --radius-lg: 22px;
+  --rule:      1px;
+  --dur-fast:  140ms;
+  --dur:       240ms;
+  --dur-slow:  520ms;
+  --ease-out:  cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in:   cubic-bezier(0.55, 0, 1, 0.45);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --shadow: 0 24px 60px -24px oklch(0% 0 0 / 0.7);
+  --maxw: 1180px;
+}

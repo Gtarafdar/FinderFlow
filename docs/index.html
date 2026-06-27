@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FinderFlow — the Mac file manager Finder should have shipped</title>
+  <meta name="description" content="A fast, native macOS file manager with a built-in code editor, Markdown reader, Finder-compatible color tags, Spotlight search, archive tools, and one-click open in Terminal / VS Code / Cursor. Universal, ~6.8 MB, free & open source." />
+  <link rel="icon" type="image/png" href="assets/icon.png" />
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="FinderFlow — a Mac Finder that does more" />
+  <meta property="og:description" content="Built-in code editor, Markdown reader, real color tags, Spotlight search, archives, and one-click IDE launch. Universal · free · open source." />
+  <meta property="og:image" content="assets/shot-list.png" />
+  <meta property="og:url" content="https://gtarafdar.github.io/FinderFlow/" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <header class="nav">
+    <div class="wrap nav__inner">
+      <a class="nav__brand" href="#top"><img src="assets/icon.png" alt="" /> FinderFlow</a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="#why">Why</a>
+        <a href="#features">Features</a>
+        <a href="#editor">Editor</a>
+        <a href="#security">Security</a>
+        <a href="#install">Install</a>
+        <a href="#maker">Maker</a>
+      </nav>
+      <a class="btn btn--primary nav__cta" href="https://github.com/Gtarafdar/FinderFlow/releases/latest">Download</a>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- HERO -->
+    <section class="section hero">
+      <div class="wrap hero__grid">
+        <div>
+          <p class="eyebrow">macOS file manager · runs fully on your Mac</p>
+          <h1>Finder, <em>but it actually does more.</em></h1>
+          <p class="hero__lead">
+            A fast, native file browser with a built-in code editor, a Markdown
+            reader, real Finder color tags, Spotlight search, and one-click IDE
+            launch — the whole stack you usually open four apps for, in one
+            window.
+          </p>
+          <div class="hero__cta">
+            <a class="btn btn--primary" href="https://github.com/Gtarafdar/FinderFlow/releases/latest">
+              Download for macOS <small>· .dmg · 6.8 MB</small>
+            </a>
+            <a class="btn btn--ghost" href="#why">See what's exclusive</a>
+          </div>
+          <div class="hero__meta">
+            <span class="chip"><b>Universal</b> — Apple Silicon + Intel</span>
+            <span class="chip"><b>macOS 14+</b></span>
+            <span class="chip"><b>Free</b> &amp; open source</span>
+          </div>
+        </div>
+        <figure class="figure">
+          <img src="assets/shot-list.png" width="900" height="572"
+               alt="FinderFlow browsing a folder in list view with colored file tags, sortable columns, a sidebar, and a search bar." />
+          <figcaption>List view — color tags, Spotlight search, copy-path, sortable columns.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- WHY / REPLACES THE STACK -->
+    <section class="section" id="why">
+      <div class="wrap">
+        <div class="section__head">
+          <p class="eyebrow">Why switch</p>
+          <h2>One app instead of four</h2>
+          <p>The reasons people move from Finder — none of these ship in macOS Finder.</p>
+        </div>
+        <div class="stack__grid">
+          <div class="replace reveal">
+            <s>No Sublime / VS Code</s>
+            <b>Edit code in place</b>
+            <span>Double-click a file → tabs, syntax highlighting, command palette, minimap.</span>
+          </div>
+          <div class="replace reveal">
+            <s>No Obsidian</s>
+            <b>Read &amp; write Markdown</b>
+            <span>Rendered preview for AI/README/notes files, plus an edit mode with ⌘S.</span>
+          </div>
+          <div class="replace reveal">
+            <s>No Terminal hunt</s>
+            <b>Open in your IDE</b>
+            <span>Terminal, VS Code, Cursor, Claude Code, Codex — one click, only what you have.</span>
+          </div>
+          <div class="replace reveal">
+            <s>No right-click digging</s>
+            <b>Copy a folder path</b>
+            <span>One button, instant toast — not three menus deep.</span>
+          </div>
+          <div class="replace reveal">
+            <s>No memorized commands</s>
+            <b>Cut / copy / paste / move</b>
+            <span>Every file op from buttons &amp; menus, with full undo / redo.</span>
+          </div>
+          <div class="replace reveal">
+            <s>No extra unzip app</s>
+            <b>Compress &amp; extract</b>
+            <span>zip in, and zip / tar / gz / bz2 / xz out — built in.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EDITOR DEEP DIVE -->
+    <section class="section" id="editor">
+      <div class="wrap dive">
+        <div>
+          <p class="eyebrow">Built-in editor</p>
+          <h3>A code editor that doesn't feel bolted on</h3>
+          <p style="color:var(--color-ink-2)">
+            Open any text or code file straight from the browser into a real,
+            standalone, resizable window — it never blocks your file navigation.
+          </p>
+          <ul>
+            <li>Syntax highlighting for dozens of languages</li>
+            <li>Multiple files as <strong>tabs</strong></li>
+            <li>Fuzzy <strong>command palette (⌘⇧P)</strong> &amp; Sublime keybindings</li>
+            <li>Theme-aware <strong>Sublime-style minimap</strong> — click/drag to scroll</li>
+            <li>Drag, minimize, resize like any native macOS window</li>
+          </ul>
+        </div>
+        <figure class="figure dive__media">
+          <img src="assets/shot-editor.png" width="1040" height="748"
+               alt="FinderFlow's built-in code editor showing a Swift file with two open tabs, line numbers, syntax highlighting, and a Sublime-style minimap on the right." />
+          <figcaption>Editor — tabs, line numbers, syntax highlighting, minimap.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- FEATURE BENTO -->
+    <section class="section" id="features">
+      <div class="wrap">
+        <div class="section__head">
+          <p class="eyebrow">Everything in the box</p>
+          <h2>All the Finder basics — plus the parts it's missing</h2>
+        </div>
+        <div class="bento">
+          <article class="card span-3 reveal">
+            <div class="ic">🗂️</div>
+            <h3>Three real views</h3>
+            <p>Column (miller) with a live preview pane, sortable List with date grouping, and a resizable Icon grid.</p>
+          </article>
+          <article class="card span-3 reveal">
+            <div class="ic">🏷️</div>
+            <h3>Finder-compatible color tags</h3>
+            <p>The 7 standard colors, multiple per file, written in macOS's real format — they show up in Finder too.</p>
+          </article>
+          <article class="card span-2 reveal">
+            <div class="ic">🔎</div>
+            <h3>Spotlight search</h3>
+            <p>This folder, recursive, or your entire Mac. Extension search (<code>.pdf</code>) included.</p>
+          </article>
+          <article class="card span-2 reveal">
+            <div class="ic">👀</div>
+            <h3>Preview that works</h3>
+            <p>Quick Look + a preview pane for images, PDFs, code, video, audio, docs.</p>
+          </article>
+          <article class="card span-2 reveal">
+            <div class="ic">↩️</div>
+            <h3>Undo / redo</h3>
+            <p>Every move, rename, paste and trash is reversible — partial-failure-safe.</p>
+          </article>
+          <article class="card span-3 reveal">
+            <div class="ic">🧩</div>
+            <h3>Finder right-click menu</h3>
+            <p>A bundled extension adds New Folder Here, Copy Path, Open in Terminal &amp; Open in FinderFlow to Finder.</p>
+            <span class="new">exclusive</span>
+          </article>
+          <article class="card span-3 reveal">
+            <div class="ic">⚙️</div>
+            <h3>Set as default folder handler</h3>
+            <p>Route folder opens to FinderFlow via LaunchServices. Pin &amp; recent folders, path bar, launch at login.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECURITY + RAM -->
+    <section class="section" id="security">
+      <div class="wrap">
+        <div class="section__head">
+          <p class="eyebrow">Trust</p>
+          <h2>Local by design, light on your Mac</h2>
+          <p>It handles your files, so it's built — and reviewed — to deserve that.</p>
+        </div>
+        <div class="trust">
+          <div class="panel reveal">
+            <h3>🔒 Security &amp; privacy</h3>
+            <ul>
+              <li><strong>100% local.</strong> No network calls, no telemetry, no accounts — nothing about your files leaves your Mac.</li>
+              <li><strong>Security-reviewed.</strong> An AppleScript-injection path via crafted filenames was found and fixed with strict literal escaping, across the app and the Finder extension.</li>
+              <li><strong>Bug-hardened.</strong> The QA pass also fixed unsaved-Markdown data loss on close and made partial paste/move failures undo-safe.</li>
+              <li><strong>Sandboxed extension.</strong> The Finder extension is sandboxed; the app uses only the file access you grant via standard macOS prompts.</li>
+              <li><strong>Open source.</strong> Read every line — MIT licensed.</li>
+            </ul>
+          </div>
+          <div class="panel reveal">
+            <h3>🪶 A RAM saver, not a hog</h3>
+            <ul>
+              <li><strong>≈ 55–60 MB idle</strong> while browsing — measured, not guessed.</li>
+              <li><strong>Cached icons.</strong> File-type icons are reused, not duplicated, so big folders stay lean.</li>
+              <li><strong>Freed on close.</strong> The editor &amp; Markdown preview use WebKit only while open; that memory is released the moment you close the window.</li>
+              <li><strong>Event-driven.</strong> No background polling, no CPU burn while it sits idle.</li>
+              <li><strong>Self-contained.</strong> No Node, no Homebrew, no runtimes to install.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REQUIREMENTS + INSTALL -->
+    <section class="section" id="install">
+      <div class="wrap">
+        <div class="section__head">
+          <p class="eyebrow">Get it running</p>
+          <h2>Requirements &amp; install</h2>
+        </div>
+        <div class="reqgrid">
+          <table class="reqtable">
+            <tbody>
+              <tr><th>macOS</th><td>14.0 Sonoma or later</td></tr>
+              <tr><th>Chip</th><td>Apple Silicon or Intel (universal)</td></tr>
+              <tr><th>Download</th><td>≈ 6.8 MB · .dmg</td></tr>
+              <tr><th>Extras</th><td>None — fully self-contained</td></tr>
+              <tr><th>Price</th><td>Free &amp; open source (MIT)</td></tr>
+            </tbody>
+          </table>
+          <div>
+            <div class="terminal" aria-label="Install steps">
+<span class="c"># 1. Download &amp; open FinderFlow-1.0.dmg, drag it into Applications</span>
+<span class="c"># 2. First launch: it's free (not paid-Apple-signed), so macOS asks once —</span>
+<span class="c">#    System Settings → Privacy &amp; Security → "Open Anyway"</span>
+<span class="c"># 3. …or clear the quarantine flag in one line:</span>
+<span class="n">$</span> xattr -dr com.apple.quarantine /Applications/FinderFlow.app
+<span class="c"># 4. (optional) enable the Finder right-click menu under</span>
+<span class="c">#    Login Items &amp; Extensions → Extensions → FinderFlow</span>
+            </div>
+            <p style="color:var(--color-muted);font-size:var(--text-sm);margin-top:var(--space-12)">
+              On first browse, macOS shows standard “allow access” prompts — normal for any file manager. Just click <strong>Allow</strong>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAKER -->
+    <section class="section" id="maker">
+      <div class="wrap">
+        <div class="maker">
+          <img class="maker__photo" src="assets/maker.png" alt="Gobinda Tarafdar" width="132" height="132" />
+          <div>
+            <p class="eyebrow">About the maker</p>
+            <h2 style="font-size:var(--text-2xl);margin-top:var(--space-8)">Gobinda Tarafdar</h2>
+            <p style="margin-top:var(--space-12)">
+              WordPress product marketer by trade, stubborn problem-solver by
+              habit, lifelong Harry Potter devotee by heart. By day I'm the
+              Product Marketing Specialist at <strong>WPBakery</strong>. Before
+              that I helped a single plugin cross <strong>400,000+ active
+              users</strong>. When the day-job owl flies home, I tinker on my own
+              little workshop of spells — FinderFlow is one of them.
+            </p>
+            <div class="workshop">
+              <a class="work" href="https://wpbakery.com/"><b>WPBakery</b><span>The page builder I market.</span></a>
+              <a class="work" href="https://thedocscriber.com/"><b>Docscriber</b><span>Documentation, conjured.</span></a>
+              <a class="work" href="https://therecaller.com/"><b>TheRecaller</b><span>A memory charm for the web.</span></a>
+              <a class="work" href="https://theeditra.com/"><b>TheEditra</b><span>A video-editing cauldron.</span></a>
+              <a class="work" href="https://thequillpress.com/"><b>The Quill Press</b><span>Tech news, Daily-Prophet style.</span></a>
+              <a class="work" href="https://costlas.com/"><b>Costlas</b><span>Cost-of-living, 140 countries.</span></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="section final">
+      <div class="wrap">
+        <h2>Give Finder the upgrade it never got.</h2>
+        <p>Install once. Browse, tag, search, edit, and launch your IDE — all in one window.</p>
+        <div class="hero__cta">
+          <a class="btn btn--primary" href="https://github.com/Gtarafdar/FinderFlow/releases/latest">Download for macOS <small>· .dmg · 6.8 MB</small></a>
+          <a class="btn btn--ghost" href="https://github.com/Gtarafdar/FinderFlow">View source on GitHub</a>
+        </div>
+        <p style="margin-top:var(--space-16)">Universal · macOS 14+ · ad-hoc signed · 6.8 MB</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="foot">
+    <div class="wrap">
+      <div class="foot__row">
+        <span>FinderFlow · runs fully on your Mac · MIT © Gobinda Tarafdar</span>
+        <nav class="foot__links" aria-label="Footer">
+          <a href="#features">Features</a>
+          <a href="#security">Security</a>
+          <a href="#maker">Maker</a>
+          <a href="https://github.com/Gtarafdar/FinderFlow">GitHub</a>
+          <a href="https://gtarafdar.com/donate">Donate</a>
+          <a href="https://x.com/Gtarafdarr">X</a>
+          <a href="https://www.linkedin.com/in/gobinda-tarafdar/">LinkedIn</a>
+        </nav>
+      </div>
+      <p class="foot__fine">
+        FinderFlow is an independent project and is not affiliated with Apple.
+        Finder is a trademark of Apple Inc.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var els = document.querySelectorAll('.reveal');
+      if (prefersReduced || !('IntersectionObserver' in window)) {
+        els.forEach(function (el) { el.classList.add('in'); });
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+      els.forEach(function (el) { io.observe(el); });
+    })();
+  </script>
+</body>
+</html>
