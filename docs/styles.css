@@ -125,7 +125,7 @@ h1, h2, h3 {
 
 /* hero spec line (replaces chip clutter) */
 .hero__facts {
-  margin-top: var(--space-32);
+  margin-top: 4.5rem; /* generous breathing room below the CTAs */
   display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px;
   font-family: var(--font-mono); font-size: var(--text-xs);
   letter-spacing: 0.03em; color: var(--color-muted); line-height: 1.7;
