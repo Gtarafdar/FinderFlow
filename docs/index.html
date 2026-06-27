@@ -4,13 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FinderFlow — the Mac file manager Finder should have shipped</title>
-  <meta name="description" content="A fast, native macOS file manager with a built-in code editor, Markdown reader, Finder-compatible color tags, Spotlight search, archive tools, and one-click open in Terminal / VS Code / Cursor. Universal, ~6.8 MB, free & open source." />
+  <meta name="description" content="A fast, native macOS file manager with a built-in code editor, Markdown reader/editor, Finder-compatible color tags, Spotlight search, archive tools, and one-click open in Terminal / VS Code / Cursor. Universal, ~6.8 MB, free & open source." />
   <link rel="icon" type="image/png" href="assets/icon.png" />
 
-  <!-- Open Graph / Twitter -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content="FinderFlow — a Mac Finder that does more" />
-  <meta property="og:description" content="Built-in code editor, Markdown reader, real color tags, Spotlight search, archives, and one-click IDE launch. Universal · free · open source." />
+  <meta property="og:description" content="Built-in code editor, Markdown reader/editor, real color tags, Spotlight search, archives, and one-click IDE launch. Universal · free · open source." />
   <meta property="og:image" content="assets/shot-list.png" />
   <meta property="og:url" content="https://gtarafdar.github.io/FinderFlow/" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -22,19 +21,52 @@
 </head>
 <body>
 
+  <!-- icon sprite -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17.9 6.6 20l1-6.1L3.2 9.5l6.1-.9z"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></symbol>
+    <symbol id="i-columns" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1.2"/><rect x="14" y="4" width="6" height="6" rx="1.2"/><rect x="4" y="14" width="6" height="6" rx="1.2"/><rect x="14" y="14" width="6" height="6" rx="1.2"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M8.5 13.5h7M8.5 16.5h4"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0l-6.2-6.2A2 2 0 0 1 3.8 13V5a2 2 0 0 1 2-2h8a2 2 0 0 1 1.4.6l5.4 5.4a2 2 0 0 1 0 2.8z"/><circle cx="8" cy="8" r="1.3"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a6 6 0 0 1 0 12h-3"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><path d="M10 13a4 4 0 0 0 5.7.4l3-3a4 4 0 0 0-5.7-5.7l-1.5 1.5"/><path d="M14 11a4 4 0 0 0-5.7-.4l-3 3a4 4 0 0 0 5.7 5.7l1.5-1.5"/></symbol>
+    <symbol id="i-archive" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 0 1-4 0v-.1A1.7 1.7 0 0 0 7 19.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H3a2 2 0 0 1 0-4h.1A1.7 1.7 0 0 0 4.8 7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H10a1.7 1.7 0 0 0 1-1.6V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V10a1.7 1.7 0 0 0 1.6 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+    <symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M14 4a2 2 0 0 0-4 0c0 .9-.7 1.3-1.4 1H6a1 1 0 0 0-1 1v2.6c.3.7-.1 1.4-1 1.4a2 2 0 0 0 0 4c.9 0 1.3.7 1 1.4V18a1 1 0 0 0 1 1h2.6c.7-.3 1.4.1 1.4 1a2 2 0 0 0 4 0c0-.9.7-1.3 1.4-1H18a1 1 0 0 0 1-1v-2.6c-.3-.7.1-1.4 1-1.4a2 2 0 0 0 0-4c-.9 0-1.3-.7-1-1.4V6a1 1 0 0 0-1-1h-2.6c-.7.3-1.4-.1-1.4-1z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="i-feather" viewBox="0 0 24 24"><path d="M20 5a6 6 0 0 0-8.5 0L4 12.5V20h7.5L19 12.5A6 6 0 0 0 20 5z"/><path d="M16 8L5 19M14 11H9M13 16H9"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l4.5 4.5L19 7"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-5.3 7-11a7 7 0 0 0-14 0c0 5.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="i-ext" viewBox="0 0 24 24"><path d="M7 17L17 7M8 7h9v9"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.5-9.4-9A5 5 0 0 1 12 5.8 5 5 0 0 1 21.4 11c-2.4 4.5-9.4 9-9.4 9z"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.1-1.47-1.1-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></symbol>
+    <symbol id="i-twitter" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></symbol>
+    <symbol id="i-linkedin" viewBox="0 0 24 24"><path d="M4.98 3.5A2.5 2.5 0 1 1 0 3.5a2.5 2.5 0 0 1 4.98 0zM.5 8h4V24h-4zM8 8h3.8v2.2h.05c.53-1 1.83-2.2 3.77-2.2 4.03 0 4.78 2.65 4.78 6.1V24h-4v-7c0-1.67-.03-3.8-2.32-3.8-2.32 0-2.68 1.8-2.68 3.68V24H8z"/></symbol>
+  </svg>
+
   <!-- NAV -->
   <header class="nav">
     <div class="wrap nav__inner">
       <a class="nav__brand" href="#top"><img src="assets/icon.png" alt="" /> FinderFlow</a>
       <nav class="nav__links" aria-label="Primary">
-        <a href="#why">Why</a>
+        <a href="#showcase">Showcase</a>
+        <a href="#why">Why switch</a>
         <a href="#features">Features</a>
-        <a href="#editor">Editor</a>
         <a href="#security">Security</a>
         <a href="#install">Install</a>
         <a href="#maker">Maker</a>
       </nav>
-      <a class="btn btn--primary nav__cta" href="https://github.com/Gtarafdar/FinderFlow/releases/latest">Download</a>
+      <a class="btn btn--primary nav__cta" href="https://github.com/Gtarafdar/FinderFlow/releases/latest"><svg class="icon"><use href="#i-download"/></svg> Download</a>
     </div>
   </header>
 
@@ -49,26 +81,69 @@
           <p class="hero__lead">
             A fast, native file browser with a built-in code editor, a Markdown
             reader, real Finder color tags, Spotlight search, and one-click IDE
-            launch — the whole stack you usually open four apps for, in one
-            window.
+            launch — the whole stack you usually open four apps for, in one window.
           </p>
           <div class="hero__cta">
             <a class="btn btn--primary" href="https://github.com/Gtarafdar/FinderFlow/releases/latest">
-              Download for macOS <small>· .dmg · 6.8 MB</small>
+              <svg class="icon"><use href="#i-download"/></svg> Download for macOS <small>· .dmg · 6.8 MB</small>
             </a>
-            <a class="btn btn--ghost" href="#why">See what's exclusive</a>
+            <a class="btn btn--ghost" href="https://github.com/Gtarafdar/FinderFlow">
+              <svg class="icon"><use href="#i-star"/></svg> Star on GitHub
+            </a>
           </div>
           <div class="hero__meta">
-            <span class="chip"><b>Universal</b> — Apple Silicon + Intel</span>
+            <span class="chip"><span class="dot"></span> <b>Universal</b> — Apple Silicon + Intel</span>
             <span class="chip"><b>macOS 14+</b></span>
             <span class="chip"><b>Free</b> &amp; open source</span>
           </div>
         </div>
-        <figure class="figure">
+        <figure class="figure hero__fig">
           <img src="assets/shot-list.png" width="900" height="572"
                alt="FinderFlow browsing a folder in list view with colored file tags, sortable columns, a sidebar, and a search bar." />
           <figcaption>List view — color tags, Spotlight search, copy-path, sortable columns.</figcaption>
         </figure>
+      </div>
+    </section>
+
+    <!-- INTERACTIVE SHOWCASE -->
+    <section class="section" id="showcase">
+      <div class="wrap">
+        <div class="section__head">
+          <p class="eyebrow">See it in action</p>
+          <h2>Every view, one window</h2>
+          <p>Click through the views — the same window, however you like to work.</p>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="FinderFlow views">
+          <button class="tab" role="tab" id="t-list" aria-controls="p-list" aria-selected="true"><svg class="icon"><use href="#i-list"/></svg> List</button>
+          <button class="tab" role="tab" id="t-cols" aria-controls="p-cols" aria-selected="false" tabindex="-1"><svg class="icon"><use href="#i-columns"/></svg> Columns</button>
+          <button class="tab" role="tab" id="t-tags" aria-controls="p-tags" aria-selected="false" tabindex="-1"><svg class="icon"><use href="#i-tag"/></svg> Icons &amp; tags</button>
+          <button class="tab" role="tab" id="t-editor" aria-controls="p-editor" aria-selected="false" tabindex="-1"><svg class="icon"><use href="#i-code"/></svg> Code editor</button>
+          <button class="tab" role="tab" id="t-md" aria-controls="p-md" aria-selected="false" tabindex="-1"><svg class="icon"><use href="#i-doc"/></svg> Markdown</button>
+        </div>
+
+        <div class="stage">
+          <div class="panel" role="tabpanel" id="p-list" aria-labelledby="t-list">
+            <figure class="figure"><img src="assets/shot-list.png" width="900" height="572" alt="List view with sortable columns and color tags." /></figure>
+            <p class="lead">Sortable columns (name, dates, size, kind), optional date grouping, inline rename, and tag dots — exactly where you expect them.</p>
+          </div>
+          <div class="panel" role="tabpanel" id="p-cols" aria-labelledby="t-cols" hidden>
+            <figure class="figure"><img src="assets/shot-columns.png" width="936" height="584" alt="Column (miller) view with a live preview pane and a Get Info panel." /></figure>
+            <p class="lead">Finder-style miller columns with a live preview pane and a Get Info panel — drill through deep folder trees without losing context.</p>
+          </div>
+          <div class="panel" role="tabpanel" id="p-tags" aria-labelledby="t-tags" hidden>
+            <figure class="figure"><img src="assets/shot-tags.png" width="933" height="588" alt="Icon view filtered by the Red tag, showing tagged items with red dots." /></figure>
+            <p class="lead">Resizable icon grid, and real color tags: tap <strong>Red</strong> in the sidebar and FinderFlow filters Mac-wide via Spotlight — the same tags show in Finder too.</p>
+          </div>
+          <div class="panel" role="tabpanel" id="p-editor" aria-labelledby="t-editor" hidden>
+            <figure class="figure"><img src="assets/shot-editor.png" width="1040" height="748" alt="Built-in code editor with two tabs, line numbers, syntax highlighting, and a minimap." /></figure>
+            <p class="lead">Open code in a real editor — tabs, syntax highlighting, command palette (⌘⇧P), and a Sublime-style minimap, in its own resizable window.</p>
+          </div>
+          <div class="panel" role="tabpanel" id="p-md" aria-labelledby="t-md" hidden>
+            <figure class="figure"><img src="assets/shot-md-read.png" width="917" height="671" alt="Markdown reader showing a rendered .md file with headings, lists, and inline code." /></figure>
+            <p class="lead">Read Markdown beautifully rendered — or switch to <strong>Edit</strong> and save with ⌘S. No Obsidian needed for your AI / README / notes files.</p>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -82,33 +157,33 @@
         </div>
         <div class="stack__grid">
           <div class="replace reveal">
-            <s>No Sublime / VS Code</s>
-            <b>Edit code in place</b>
+            <div class="replace__top"><svg class="icon"><use href="#i-x"/></svg> <s>No Sublime / VS Code</s></div>
+            <b><svg class="icon"><use href="#i-code"/></svg> Edit code in place</b>
             <span>Double-click a file → tabs, syntax highlighting, command palette, minimap.</span>
           </div>
           <div class="replace reveal">
-            <s>No Obsidian</s>
-            <b>Read &amp; write Markdown</b>
-            <span>Rendered preview for AI/README/notes files, plus an edit mode with ⌘S.</span>
+            <div class="replace__top"><svg class="icon"><use href="#i-x"/></svg> <s>No Obsidian</s></div>
+            <b><svg class="icon"><use href="#i-doc"/></svg> Read &amp; write Markdown</b>
+            <span>Rendered preview for AI / README / notes files, plus an edit mode with ⌘S.</span>
           </div>
           <div class="replace reveal">
-            <s>No Terminal hunt</s>
-            <b>Open in your IDE</b>
+            <div class="replace__top"><svg class="icon"><use href="#i-x"/></svg> <s>No Terminal hunt</s></div>
+            <b><svg class="icon"><use href="#i-terminal"/></svg> Open in your IDE</b>
             <span>Terminal, VS Code, Cursor, Claude Code, Codex — one click, only what you have.</span>
           </div>
           <div class="replace reveal">
-            <s>No right-click digging</s>
-            <b>Copy a folder path</b>
+            <div class="replace__top"><svg class="icon"><use href="#i-x"/></svg> <s>No right-click digging</s></div>
+            <b><svg class="icon"><use href="#i-copy"/></svg> Copy a folder path</b>
             <span>One button, instant toast — not three menus deep.</span>
           </div>
           <div class="replace reveal">
-            <s>No memorized commands</s>
-            <b>Cut / copy / paste / move</b>
+            <div class="replace__top"><svg class="icon"><use href="#i-x"/></svg> <s>No memorized commands</s></div>
+            <b><svg class="icon"><use href="#i-undo"/></svg> Cut / copy / paste / move</b>
             <span>Every file op from buttons &amp; menus, with full undo / redo.</span>
           </div>
           <div class="replace reveal">
-            <s>No extra unzip app</s>
-            <b>Compress &amp; extract</b>
+            <div class="replace__top"><svg class="icon"><use href="#i-x"/></svg> <s>No extra unzip app</s></div>
+            <b><svg class="icon"><use href="#i-archive"/></svg> Compress &amp; extract</b>
             <span>zip in, and zip / tar / gz / bz2 / xz out — built in.</span>
           </div>
         </div>
@@ -126,11 +201,11 @@
             standalone, resizable window — it never blocks your file navigation.
           </p>
           <ul>
-            <li>Syntax highlighting for dozens of languages</li>
-            <li>Multiple files as <strong>tabs</strong></li>
-            <li>Fuzzy <strong>command palette (⌘⇧P)</strong> &amp; Sublime keybindings</li>
-            <li>Theme-aware <strong>Sublime-style minimap</strong> — click/drag to scroll</li>
-            <li>Drag, minimize, resize like any native macOS window</li>
+            <li><svg class="icon"><use href="#i-check"/></svg> Syntax highlighting for dozens of languages</li>
+            <li><svg class="icon"><use href="#i-check"/></svg> Multiple files as <strong>tabs</strong></li>
+            <li><svg class="icon"><use href="#i-check"/></svg> Fuzzy <strong>command palette (⌘⇧P)</strong> &amp; Sublime keybindings</li>
+            <li><svg class="icon"><use href="#i-check"/></svg> Theme-aware <strong>Sublime-style minimap</strong> — click/drag to scroll</li>
+            <li><svg class="icon"><use href="#i-check"/></svg> Drag, minimize, resize like any native macOS window</li>
           </ul>
         </div>
         <figure class="figure dive__media">
@@ -138,6 +213,27 @@
                alt="FinderFlow's built-in code editor showing a Swift file with two open tabs, line numbers, syntax highlighting, and a Sublime-style minimap on the right." />
           <figcaption>Editor — tabs, line numbers, syntax highlighting, minimap.</figcaption>
         </figure>
+      </div>
+    </section>
+
+    <!-- MARKDOWN DEEP DIVE -->
+    <section class="section" id="markdown">
+      <div class="wrap">
+        <div class="section__head">
+          <p class="eyebrow">Markdown, built in</p>
+          <h2>Read it clean. Edit it fast.</h2>
+          <p>AI hands you Markdown all day. Read it rendered, or flip to edit and save with ⌘S — without ever leaving your files.</p>
+        </div>
+        <div class="mdgrid">
+          <figure class="figure reveal">
+            <img src="assets/shot-md-read.png" width="917" height="671" alt="Markdown reader showing a rendered document with headings, bullet lists, and inline code spans." />
+            <figcaption>Read mode — rendered, styled, with inline code &amp; links.</figcaption>
+          </figure>
+          <figure class="figure reveal">
+            <img src="assets/shot-md-edit.png" width="903" height="645" alt="Markdown edit mode showing the raw source of the same document with monospaced text." />
+            <figcaption>Edit mode — raw Markdown, ⌘S to save, auto-save on close.</figcaption>
+          </figure>
+        </div>
       </div>
     </section>
 
@@ -150,40 +246,62 @@
         </div>
         <div class="bento">
           <article class="card span-3 reveal">
-            <div class="ic">🗂️</div>
+            <div class="badge"><svg class="icon"><use href="#i-columns"/></svg></div>
             <h3>Three real views</h3>
             <p>Column (miller) with a live preview pane, sortable List with date grouping, and a resizable Icon grid.</p>
           </article>
           <article class="card span-3 reveal">
-            <div class="ic">🏷️</div>
+            <div class="badge badge--coral"><svg class="icon"><use href="#i-tag"/></svg></div>
             <h3>Finder-compatible color tags</h3>
             <p>The 7 standard colors, multiple per file, written in macOS's real format — they show up in Finder too.</p>
+            <span class="new">exclusive</span>
           </article>
           <article class="card span-2 reveal">
-            <div class="ic">🔎</div>
+            <div class="badge"><svg class="icon"><use href="#i-search"/></svg></div>
             <h3>Spotlight search</h3>
             <p>This folder, recursive, or your entire Mac. Extension search (<code>.pdf</code>) included.</p>
           </article>
           <article class="card span-2 reveal">
-            <div class="ic">👀</div>
+            <div class="badge"><svg class="icon"><use href="#i-eye"/></svg></div>
             <h3>Preview that works</h3>
             <p>Quick Look + a preview pane for images, PDFs, code, video, audio, docs.</p>
           </article>
           <article class="card span-2 reveal">
-            <div class="ic">↩️</div>
-            <h3>Undo / redo</h3>
+            <div class="badge"><svg class="icon"><use href="#i-undo"/></svg></div>
+            <h3>Undo / redo everything</h3>
             <p>Every move, rename, paste and trash is reversible — partial-failure-safe.</p>
           </article>
+          <article class="card span-2 reveal">
+            <div class="badge badge--coral"><svg class="icon"><use href="#i-terminal"/></svg></div>
+            <h3>One-click IDE launch</h3>
+            <p>Open the folder in Terminal, VS Code, Cursor, Claude Code or Codex — only what you have shows.</p>
+            <span class="new">exclusive</span>
+          </article>
+          <article class="card span-2 reveal">
+            <div class="badge"><svg class="icon"><use href="#i-copy"/></svg></div>
+            <h3>Copy path in one click</h3>
+            <p>A dedicated copy-path button with a confirmation toast — no menu digging.</p>
+          </article>
+          <article class="card span-2 reveal">
+            <div class="badge"><svg class="icon"><use href="#i-archive"/></svg></div>
+            <h3>Archive tools</h3>
+            <p>Compress to zip; extract zip / tar / gz / tgz / bz2 / xz with built-in tools.</p>
+          </article>
+          <article class="card span-2 reveal">
+            <div class="badge"><svg class="icon"><use href="#i-share"/></svg></div>
+            <h3>Share, AirDrop &amp; Get Info</h3>
+            <p>Share/AirDrop, Get Info, Show in Finder, make alias — the native actions you rely on.</p>
+          </article>
           <article class="card span-3 reveal">
-            <div class="ic">🧩</div>
+            <div class="badge badge--coral"><svg class="icon"><use href="#i-puzzle"/></svg></div>
             <h3>Finder right-click menu</h3>
-            <p>A bundled extension adds New Folder Here, Copy Path, Open in Terminal &amp; Open in FinderFlow to Finder.</p>
+            <p>A bundled extension adds New Folder Here, Copy Path, Open in Terminal &amp; Open in FinderFlow right into Finder.</p>
             <span class="new">exclusive</span>
           </article>
           <article class="card span-3 reveal">
-            <div class="ic">⚙️</div>
+            <div class="badge"><svg class="icon"><use href="#i-gear"/></svg></div>
             <h3>Set as default folder handler</h3>
-            <p>Route folder opens to FinderFlow via LaunchServices. Pin &amp; recent folders, path bar, launch at login.</p>
+            <p>Route folder opens to FinderFlow via LaunchServices. Pinned &amp; recent folders, path bar, disk-space status, launch at login.</p>
           </article>
         </div>
       </div>
@@ -198,26 +316,54 @@
           <p>It handles your files, so it's built — and reviewed — to deserve that.</p>
         </div>
         <div class="trust">
-          <div class="panel reveal">
-            <h3>🔒 Security &amp; privacy</h3>
+          <div class="panel-card reveal">
+            <h3><span class="badge badge--green"><svg class="icon"><use href="#i-shield"/></svg></span> Security &amp; privacy</h3>
             <ul>
-              <li><strong>100% local.</strong> No network calls, no telemetry, no accounts — nothing about your files leaves your Mac.</li>
-              <li><strong>Security-reviewed.</strong> An AppleScript-injection path via crafted filenames was found and fixed with strict literal escaping, across the app and the Finder extension.</li>
-              <li><strong>Bug-hardened.</strong> The QA pass also fixed unsaved-Markdown data loss on close and made partial paste/move failures undo-safe.</li>
-              <li><strong>Sandboxed extension.</strong> The Finder extension is sandboxed; the app uses only the file access you grant via standard macOS prompts.</li>
-              <li><strong>Open source.</strong> Read every line — MIT licensed.</li>
+              <li><svg class="icon"><use href="#i-check"/></svg> <strong>100% local.</strong> No network calls, no telemetry, no accounts — nothing about your files leaves your Mac.</li>
+              <li><svg class="icon"><use href="#i-check"/></svg> <strong>Security-reviewed.</strong> An AppleScript-injection path via crafted filenames was found and fixed with strict literal escaping, across the app and the Finder extension.</li>
+              <li><svg class="icon"><use href="#i-check"/></svg> <strong>Bug-hardened.</strong> The QA pass also fixed unsaved-Markdown data loss on close and made partial paste/move failures undo-safe.</li>
+              <li><svg class="icon"><use href="#i-check"/></svg> <strong>Sandboxed extension.</strong> The Finder extension is sandboxed; the app uses only the file access you grant via standard macOS prompts.</li>
+              <li><svg class="icon"><use href="#i-check"/></svg> <strong>Open source.</strong> Read every line — MIT licensed.</li>
             </ul>
           </div>
-          <div class="panel reveal">
-            <h3>🪶 A RAM saver, not a hog</h3>
+          <div class="panel-card reveal">
+            <h3><span class="badge"><svg class="icon"><use href="#i-feather"/></svg></span> A RAM saver, not a hog</h3>
             <ul>
-              <li><strong>≈ 55–60 MB idle</strong> while browsing — measured, not guessed.</li>
-              <li><strong>Cached icons.</strong> File-type icons are reused, not duplicated, so big folders stay lean.</li>
-              <li><strong>Freed on close.</strong> The editor &amp; Markdown preview use WebKit only while open; that memory is released the moment you close the window.</li>
-              <li><strong>Event-driven.</strong> No background polling, no CPU burn while it sits idle.</li>
-              <li><strong>Self-contained.</strong> No Node, no Homebrew, no runtimes to install.</li>
+              <li><svg class="icon"><use href="#i-check"/></svg> <strong>≈ 55–60 MB idle</strong> while browsing — measured, not guessed.</li>
+              <li><svg class="icon"><use href="#i-check"/></svg> <strong>Cached icons.</strong> File-type icons are reused, not duplicated, so big folders stay lean.</li>
+              <li><svg class="icon"><use href="#i-check"/></svg> <strong>Freed on close.</strong> The editor &amp; Markdown preview use WebKit only while open; that memory is released the moment you close the window.</li>
+              <li><svg class="icon"><use href="#i-check"/></svg> <strong>Event-driven.</strong> No background polling, no CPU burn while it sits idle.</li>
+              <li><svg class="icon"><use href="#i-check"/></svg> <strong>Self-contained.</strong> No Node, no Homebrew, no runtimes to install.</li>
             </ul>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHY I BUILT THIS -->
+    <section class="section" id="story">
+      <div class="wrap why">
+        <div>
+          <p class="eyebrow">Why I built this</p>
+          <p class="why__lead">Finder is fine — until the moment you need a little more, and have to go find another app.</p>
+        </div>
+        <div>
+          <p>
+            I live in my files. All day I'm jumping between folders, peeking into a
+            config, fixing one line in a script, reading a Markdown file an AI just
+            wrote me, then opening that folder in my editor or terminal. With Finder,
+            every one of those is a detour into another app.
+          </p>
+          <p>
+            So I built the file manager I actually wanted — one that <span class="pull">edits
+            the file, renders the Markdown, copies the path, and opens the IDE</span>
+            without ever leaving the window. It stays out of your way, runs entirely
+            on your Mac, and sips RAM instead of hogging it.
+          </p>
+          <p>
+            It's a premium-feeling app, but it's free and open source. If you've ever
+            wished Finder did just a bit more, it's yours too.
+          </p>
         </div>
       </div>
     </section>
@@ -252,6 +398,9 @@
             <p style="color:var(--color-muted);font-size:var(--text-sm);margin-top:var(--space-12)">
               On first browse, macOS shows standard “allow access” prompts — normal for any file manager. Just click <strong>Allow</strong>.
             </p>
+            <div class="hero__cta">
+              <a class="btn btn--primary" href="https://github.com/Gtarafdar/FinderFlow/releases/latest"><svg class="icon"><use href="#i-download"/></svg> Download FinderFlow 1.0</a>
+            </div>
           </div>
         </div>
       </div>
@@ -266,22 +415,55 @@
             <p class="eyebrow">About the maker</p>
             <h2 style="font-size:var(--text-2xl);margin-top:var(--space-8)">Gobinda Tarafdar</h2>
             <p style="margin-top:var(--space-12)">
-              WordPress product marketer by trade, stubborn problem-solver by
-              habit, lifelong Harry Potter devotee by heart. By day I'm the
-              Product Marketing Specialist at <strong>WPBakery</strong>. Before
-              that I helped a single plugin cross <strong>400,000+ active
-              users</strong>. When the day-job owl flies home, I tinker on my own
-              little workshop of spells — FinderFlow is one of them.
+              WordPress product marketer by trade, stubborn problem-solver by habit,
+              lifelong Harry Potter devotee by heart. By day I'm the Product Marketing
+              Specialist at <strong>WPBakery</strong>. Before that I helped a single
+              plugin cross <strong>400,000+ active users</strong>. When the day-job owl
+              flies home, I tinker on my own little workshop of spells — FinderFlow is
+              one of them.
             </p>
             <div class="workshop">
-              <a class="work" href="https://wpbakery.com/"><b>WPBakery</b><span>The page builder I market.</span></a>
-              <a class="work" href="https://thedocscriber.com/"><b>Docscriber</b><span>Documentation, conjured.</span></a>
-              <a class="work" href="https://therecaller.com/"><b>TheRecaller</b><span>A memory charm for the web.</span></a>
-              <a class="work" href="https://theeditra.com/"><b>TheEditra</b><span>A video-editing cauldron.</span></a>
-              <a class="work" href="https://thequillpress.com/"><b>The Quill Press</b><span>Tech news, Daily-Prophet style.</span></a>
-              <a class="work" href="https://costlas.com/"><b>Costlas</b><span>Cost-of-living, 140 countries.</span></a>
+              <a class="work" href="https://wpbakery.com/"><b>WPBakery <svg class="icon"><use href="#i-ext"/></svg></b><span>The page builder I market.</span></a>
+              <a class="work" href="https://thedocscriber.com/"><b>Docscriber <svg class="icon"><use href="#i-ext"/></svg></b><span>Documentation, conjured.</span></a>
+              <a class="work" href="https://therecaller.com/"><b>TheRecaller <svg class="icon"><use href="#i-ext"/></svg></b><span>A memory charm for the web.</span></a>
+              <a class="work" href="https://theeditra.com/"><b>TheEditra <svg class="icon"><use href="#i-ext"/></svg></b><span>A video-editing cauldron.</span></a>
+              <a class="work" href="https://thequillpress.com/"><b>The Quill Press <svg class="icon"><use href="#i-ext"/></svg></b><span>Tech news, Daily-Prophet style.</span></a>
+              <a class="work" href="https://costlas.com/"><b>Costlas <svg class="icon"><use href="#i-ext"/></svg></b><span>Cost-of-living, 140 countries.</span></a>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUPPORT / STAR -->
+    <section class="section" id="support">
+      <div class="wrap">
+        <div class="section__head">
+          <p class="eyebrow">Support the project</p>
+          <h2>If it saves you a trip to Finder, give it a star</h2>
+          <p>FinderFlow is free and open source. A star helps others find it; a small donation keeps the workshop lit.</p>
+        </div>
+        <div class="support__grid">
+          <a class="support" href="https://github.com/Gtarafdar/FinderFlow">
+            <svg class="icon"><use href="#i-star"/></svg>
+            <b>Star on GitHub</b>
+            <span>Helps others discover it.</span>
+          </a>
+          <a class="support" href="https://gtarafdar.com/donate">
+            <svg class="icon"><use href="#i-heart"/></svg>
+            <b>Donate</b>
+            <span>Keeps the workshop lit.</span>
+          </a>
+          <a class="support" href="https://x.com/Gtarafdarr">
+            <svg class="icon icon--fill" style="fill:currentColor;stroke:none"><use href="#i-twitter"/></svg>
+            <b>Follow on X</b>
+            <span>New tools &amp; updates.</span>
+          </a>
+          <a class="support" href="https://www.linkedin.com/in/gobinda-tarafdar/">
+            <svg class="icon icon--fill" style="fill:currentColor;stroke:none"><use href="#i-linkedin"/></svg>
+            <b>Connect on LinkedIn</b>
+            <span>Say hello.</span>
+          </a>
         </div>
       </div>
     </section>
@@ -292,8 +474,8 @@
         <h2>Give Finder the upgrade it never got.</h2>
         <p>Install once. Browse, tag, search, edit, and launch your IDE — all in one window.</p>
         <div class="hero__cta">
-          <a class="btn btn--primary" href="https://github.com/Gtarafdar/FinderFlow/releases/latest">Download for macOS <small>· .dmg · 6.8 MB</small></a>
-          <a class="btn btn--ghost" href="https://github.com/Gtarafdar/FinderFlow">View source on GitHub</a>
+          <a class="btn btn--primary" href="https://github.com/Gtarafdar/FinderFlow/releases/latest"><svg class="icon"><use href="#i-download"/></svg> Download for macOS <small>· .dmg · 6.8 MB</small></a>
+          <a class="btn btn--ghost" href="https://github.com/Gtarafdar/FinderFlow"><svg class="icon"><use href="#i-github"/></svg> View source on GitHub</a>
         </div>
         <p style="margin-top:var(--space-16)">Universal · macOS 14+ · ad-hoc signed · 6.8 MB</p>
       </div>
@@ -306,6 +488,7 @@
       <div class="foot__row">
         <span>FinderFlow · runs fully on your Mac · MIT © Gobinda Tarafdar</span>
         <nav class="foot__links" aria-label="Footer">
+          <a href="#showcase">Showcase</a>
           <a href="#features">Features</a>
           <a href="#security">Security</a>
           <a href="#maker">Maker</a>
@@ -323,19 +506,49 @@
   </footer>
 
   <script>
+    // Reveal on scroll
     (function () {
       var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       var els = document.querySelectorAll('.reveal');
       if (prefersReduced || !('IntersectionObserver' in window)) {
         els.forEach(function (el) { el.classList.add('in'); });
-        return;
+      } else {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+          });
+        }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+        els.forEach(function (el) { io.observe(el); });
       }
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    })();
+
+    // Interactive showcase tabs
+    (function () {
+      var tablist = document.querySelector('[role="tablist"]');
+      if (!tablist) return;
+      var tabs = Array.prototype.slice.call(tablist.querySelectorAll('[role="tab"]'));
+      function select(tab) {
+        tabs.forEach(function (t) {
+          var on = t === tab;
+          t.setAttribute('aria-selected', on ? 'true' : 'false');
+          t.tabIndex = on ? 0 : -1;
+          document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
         });
-      }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
-      els.forEach(function (el) { io.observe(el); });
+      }
+      tablist.addEventListener('click', function (e) {
+        var tab = e.target.closest('[role="tab"]');
+        if (tab) select(tab);
+      });
+      tablist.addEventListener('keydown', function (e) {
+        var i = tabs.indexOf(document.activeElement);
+        if (i < 0) return;
+        var n = null;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') n = tabs[(i + 1) % tabs.length];
+        else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') n = tabs[(i - 1 + tabs.length) % tabs.length];
+        else if (e.key === 'Home') n = tabs[0];
+        else if (e.key === 'End') n = tabs[tabs.length - 1];
+        if (n) { e.preventDefault(); n.focus(); select(n); }
+      });
     })();
   </script>
 </body>

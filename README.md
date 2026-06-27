@@ -45,6 +45,14 @@ account, and no network calls**.
 | :---: | :---: |
 | ![List view with color tags](docs/assets/shot-list.png) | ![Built-in code editor with minimap](docs/assets/shot-editor.png) |
 | Color tags, Spotlight search, sortable columns, copy-path | Tabs, syntax highlighting, command palette, Sublime-style minimap |
+|  Column view + preview  |  Icon view + color tags  |
+| ![Column view with preview pane](docs/assets/shot-columns.png) | ![Icon view filtered by the Red tag](docs/assets/shot-tags.png) |
+| Finder-style miller columns with a live preview & Get Info pane | Resizable icon grid; tap a tag to filter Mac-wide |
+|  Markdown — read mode  |  Markdown — edit mode  |
+| ![Markdown reader](docs/assets/shot-md-read.png) | ![Markdown editor](docs/assets/shot-md-edit.png) |
+| Rendered preview (no Obsidian needed) | Edit & save with ⌘S, auto-save on close |
+
+> 🌐 **[See the interactive showcase on the landing page →](https://gtarafdar.github.io/FinderFlow/#showcase)**
 
 ---
 
