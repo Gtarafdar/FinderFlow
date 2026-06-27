@@ -112,6 +112,7 @@ h1, h2, h3 {
 .hero h1 em { font-style: italic; color: var(--color-coral); }
 .hero__lead { color: var(--color-ink-2); font-size: var(--text-lg); max-width: 50ch; margin-top: var(--space-16); }
 .hero__cta { display: flex; flex-wrap: wrap; gap: var(--space-12); margin-top: var(--space-24); }
+.hero .hero__cta .btn { padding: 0.82rem 1.05rem; }
 .hero__meta { display: flex; flex-wrap: wrap; gap: var(--space-8); margin-top: var(--space-16); }
 .chip {
   display: inline-flex; align-items: center; gap: 6px;
@@ -132,13 +133,11 @@ h1, h2, h3 {
 .hero__facts b { color: var(--color-ink-2); font-weight: 600; }
 .hero__facts .dot { width: 7px; height: 7px; border-radius: 999px; background: var(--color-green); flex: none; box-shadow: 0 0 0 4px oklch(72% 0.16 150 / 0.16); }
 
-/* quiet "scroll to features" button */
-.btn--scroll { background: transparent; border-color: transparent; color: var(--color-ink-2); padding-inline: 0.65rem; }
-.btn--scroll:hover { color: var(--color-ink); transform: none; }
-.btn--scroll:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }
+/* "scroll to features" button — outlined (btn--ghost) with a nudging arrow */
 @media (prefers-reduced-motion: no-preference) {
   .btn--scroll .icon { animation: nudge 1.9s var(--ease-out) infinite; }
 }
+.btn--scroll:hover .icon { animation: none; transform: translateY(3px); }
 @keyframes nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
 
 .figure { margin: 0; border: var(--rule) solid var(--color-line-2); border-radius: var(--radius-lg); overflow: hidden; background: var(--color-paper-2); box-shadow: var(--shadow); }
