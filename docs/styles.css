@@ -122,6 +122,25 @@ h1, h2, h3 {
 .chip b { color: var(--color-ink); font-weight: 600; }
 .chip .dot { width: 7px; height: 7px; border-radius: 999px; background: var(--color-green); }
 
+/* hero spec line (replaces chip clutter) */
+.hero__facts {
+  margin-top: var(--space-20);
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px;
+  font-family: var(--font-mono); font-size: var(--text-xs);
+  letter-spacing: 0.03em; color: var(--color-muted); line-height: 1.7;
+}
+.hero__facts b { color: var(--color-ink-2); font-weight: 600; }
+.hero__facts .dot { width: 7px; height: 7px; border-radius: 999px; background: var(--color-green); flex: none; box-shadow: 0 0 0 4px oklch(72% 0.16 150 / 0.16); }
+
+/* quiet "scroll to features" button */
+.btn--scroll { background: transparent; border-color: transparent; color: var(--color-ink-2); padding-inline: 0.65rem; }
+.btn--scroll:hover { color: var(--color-ink); transform: none; }
+.btn--scroll:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }
+@media (prefers-reduced-motion: no-preference) {
+  .btn--scroll .icon { animation: nudge 1.9s var(--ease-out) infinite; }
+}
+@keyframes nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+
 .figure { margin: 0; border: var(--rule) solid var(--color-line-2); border-radius: var(--radius-lg); overflow: hidden; background: var(--color-paper-2); box-shadow: var(--shadow); }
 .figure img { width: 100%; }
 .figure figcaption { font-size: var(--text-xs); color: var(--color-muted); padding: var(--space-8) var(--space-12); border-top: var(--rule) solid var(--color-line); font-family: var(--font-mono); }
