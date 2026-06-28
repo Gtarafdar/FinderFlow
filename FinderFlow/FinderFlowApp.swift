@@ -73,6 +73,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if isDir.boolValue {
                 AppDelegate.pendingNavigationURL = url
                 NotificationCenter.default.post(name: .navigateToPath, object: url)
+            } else if url.pathExtension.lowercased() == "md" {
+                // Markdown → rendered reader window (matches in-app double-click).
+                MarkdownWindowManager.shared.open(url)
             } else if TextFileDetector.isEditableText(url) {
                 // A text/code file opened with FinderFlow → open it in the editor window.
                 EditorWindowManager.shared.open(url)

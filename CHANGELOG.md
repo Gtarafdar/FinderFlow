@@ -5,6 +5,22 @@ relative to the 1.0 release.
 
 ---
 
+## 1.1 — Markdown reader in its own window
+
+- **Draggable & resizable Markdown reader** — the Markdown reader/editor now
+  opens in a real macOS window (drag by the titlebar, resize, zoom, minimise)
+  instead of a fixed modal sheet, matching the built-in code editor. The window
+  is reused for subsequent Markdown files and remembers its size/position.
+- **"Open in editor" now uses FinderFlow's own editor** — the reader's toolbar
+  link button previously launched an external app (Obsidian / TextEdit / etc.);
+  it now opens the file in FinderFlow's built-in code editor. Unsaved Markdown
+  edits are auto-saved first so the editor shows the latest content.
+- **Consistent Markdown handling** — opening a `.md` file *with* FinderFlow
+  (from Finder or the command line) now shows the rendered reader, matching what
+  double-clicking a `.md` inside the app already did.
+
+---
+
 ## 1.0 — First public release
 
 The first shippable build: a fast, native macOS file manager and Finder

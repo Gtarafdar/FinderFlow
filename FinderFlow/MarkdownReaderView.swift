@@ -1,5 +1,6 @@
 import SwiftUI
 import WebKit
+import AppKit
 
 // MARK: - Wrapper so URL works with .sheet(item:)
 
@@ -19,7 +20,10 @@ private enum MDMode: String, Hashable {
 
 struct MarkdownReaderView: View {
     let initialURL: URL
-    @Environment(\.dismiss) private var dismiss
+    /// Closes the hosting window (supplied by MarkdownWindowManager).
+    var onClose: () -> Void = {}
+    /// Pushes the live document title (with • when dirty) to the window titlebar.
+    var onTitleChange: ((String) -> Void)? = nil
 
     @State private var navStack:   [URL]   = []
     @State private var current:    URL
@@ -29,9 +33,13 @@ struct MarkdownReaderView: View {
     @State private var saveFlash:  String? = nil
     @State private var refreshID:  UUID    = UUID()
 
-    init(url: URL) {
-        self.initialURL = url
-        self._current   = State(initialValue: url)
+    init(url: URL,
+         onClose: @escaping () -> Void = {},
+         onTitleChange: ((String) -> Void)? = nil) {
+        self.initialURL    = url
+        self.onClose       = onClose
+        self.onTitleChange = onTitleChange
+        self._current      = State(initialValue: url)
     }
 
     var body: some View {
@@ -41,10 +49,11 @@ struct MarkdownReaderView: View {
             contentArea
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(minWidth: 780, minHeight: 580)
-        .onAppear        { loadFile() }
-        .onChange(of: current) { _, _ in loadFile() }
-        // Safety net: never lose edits if the sheet is dismissed another way.
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear        { loadFile(); pushTitle() }
+        .onChange(of: current)    { _, _ in loadFile(); pushTitle() }
+        .onChange(of: isModified) { _, _ in pushTitle() }
+        // Safety net: never lose edits if the window is closed another way.
         .onDisappear { if isModified { try? editText.write(to: current, atomically: true, encoding: .utf8) } }
     }
 
@@ -128,19 +137,20 @@ struct MarkdownReaderView: View {
 
             Divider().frame(height: 16)
 
-            // Open externally — tries real Markdown apps before falling back
+            // Open this file in FinderFlow's own built-in code editor
             Button {
-                openExternally()
+                if isModified { commitSave() }
+                EditorWindowManager.shared.open(current)
             } label: {
-                Image(systemName: "arrow.up.right.square")
+                Image(systemName: "chevron.left.forwardslash.chevron.right")
                     .font(.caption)
             }
             .buttonStyle(.borderless)
-            .help("Open in external Markdown editor")
+            .help("Open in FinderFlow editor")
 
             Divider().frame(height: 16)
 
-            Button("Done") { if isModified { commitSave() }; dismiss() }
+            Button("Done") { if isModified { commitSave() }; onClose() }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
                 .keyboardShortcut(.escape, modifiers: [])
@@ -192,27 +202,59 @@ struct MarkdownReaderView: View {
         }
     }
 
-    /// Open the file in an external Markdown app — avoids Xcode by trying
-    /// dedicated apps first, falling back to TextEdit (always installed).
-    private func openExternally() {
-        let candidates = [
-            "md.obsidian",
-            "abnerworks.Typora",
-            "com.uranusjr.macdown",
-            "net.shinyfrog.bear",
-            "com.brettterpstra.marked2",
-            "com.apple.TextEdit",          // guaranteed fallback
-        ]
-        for bundleID in candidates {
-            if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) {
-                let cfg = NSWorkspace.OpenConfiguration()
-                NSWorkspace.shared.open([current], withApplicationAt: appURL,
-                                        configuration: cfg, completionHandler: nil)
-                return
-            }
+    /// Keep the window titlebar in sync with the current file + dirty state.
+    private func pushTitle() {
+        let name = current.deletingPathExtension().lastPathComponent
+        onTitleChange?((isModified ? "• " : "") + name)
+    }
+}
+
+// MARK: - Standalone Markdown window (real macOS window: draggable + resizable)
+
+/// Hosts `MarkdownReaderView` in a genuine `NSWindow` — mirroring the code
+/// editor — so the reader can be dragged by its titlebar, resized, zoomed and
+/// minimised like any native window (instead of a fixed, modal sheet).
+@MainActor
+final class MarkdownWindowManager: NSObject, NSWindowDelegate {
+    static let shared = MarkdownWindowManager()
+
+    private var window: NSWindow?
+
+    /// Open a `.md` file in the reader window, reusing the existing window if any.
+    func open(_ url: URL) {
+        if let window {
+            window.contentViewController = makeHosting(url)
+            window.title = url.deletingPathExtension().lastPathComponent
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
         }
-        // Last resort: let the system decide (may be Xcode on dev machines)
-        NSWorkspace.shared.open(current)
+
+        let window = NSWindow(contentViewController: makeHosting(url))
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
+        window.title = url.deletingPathExtension().lastPathComponent
+        window.setContentSize(NSSize(width: 900, height: 680))
+        window.minSize = NSSize(width: 560, height: 400)
+        window.isReleasedWhenClosed = false
+        window.delegate = self
+        window.center()
+        window.setFrameAutosaveName("FinderFlowMarkdownWindow")
+        self.window = window
+
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private func makeHosting(_ url: URL) -> NSHostingController<MarkdownReaderView> {
+        NSHostingController(rootView: MarkdownReaderView(
+            url: url,
+            onClose:       { [weak self] in self?.window?.performClose(nil) },
+            onTitleChange: { [weak self] title in self?.window?.title = title }
+        ))
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        window = nil
     }
 }
 

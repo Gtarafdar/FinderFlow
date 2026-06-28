@@ -26,7 +26,6 @@ struct ContentView: View {
     @State private var tagDisplayFiles:  [FileItem] = []
     @State private var toastItem:        ToastPayload?
     @State private var errorMsg:         String?
-    @State private var markdownItem:     MarkdownFileItem?
 
     // Derived selected item for preview
     private var selectedItem: FileItem? {
@@ -245,10 +244,6 @@ struct ContentView: View {
         )) {
             Button("OK", role: .cancel) { errorMsg = nil }
         } message: { Text(errorMsg ?? "") }
-        // Markdown reader sheet — opens when a .md file is double-clicked or "Open"-ed
-        .sheet(item: $markdownItem) { item in
-            MarkdownReaderView(url: item.url)
-        }
     }
 
     // MARK: - Keyboard shortcuts (hidden buttons)
@@ -435,7 +430,7 @@ struct ContentView: View {
         if exists && isDir.boolValue {
             currentPath = url
         } else if url.pathExtension.lowercased() == "md" {
-            markdownItem = MarkdownFileItem(url: url)
+            MarkdownWindowManager.shared.open(url)
         } else if TextFileDetector.isEditableText(url) {
             EditorWindowManager.shared.open(url)
         } else {
