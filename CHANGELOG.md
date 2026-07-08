@@ -5,6 +5,21 @@ relative to the 1.0 release.
 
 ---
 
+## 1.4 — Finder-like defaults + in-app updates
+
+- **Finder-like defaults on first launch** — list view, name sort, **date-modified
+  groups** (Today, Yesterday, 7/30/90 days, Earlier), and folders on top. All
+  browse preferences are **remembered** across launches; change anything via the
+  toolbar and it sticks.
+- **Reset to Finder defaults** in Settings restores those factory browse settings.
+- **In-app updates** — FinderFlow checks GitHub Releases (about twice a day) and
+  shows a banner when a newer version is available. **Update Now** downloads the
+  DMG, **verifies SHA-256** against the published checksum, replaces the running
+  app, and relaunches — no hunting the repo. **Check for Updates** is also in
+  the FinderFlow menu and Settings.
+
+---
+
 ## 1.3 — Launch apps + faster folder browsing
 
 - **Double-click `.app` bundles now launch the app** instead of opening the

@@ -119,8 +119,12 @@ hdiutil create \
     "$DMG" >/dev/null
 
 echo "==> Done"
-echo "    DMG:    $DMG"
-echo "    Size:   $(du -h "$DMG" | cut -f1)"
-echo "    SHA256: $(shasum -a 256 "$DMG" | cut -d' ' -f1)"
+SHA256=$(shasum -a 256 "$DMG" | cut -d' ' -f1)
+CHECKSUM="$DMG.sha256"
+echo "$SHA256" > "$CHECKSUM"
+echo "    DMG:      $DMG"
+echo "    Checksum: $CHECKSUM"
+echo "    Size:     $(du -h "$DMG" | cut -f1)"
+echo "    SHA256:   $SHA256"
 echo ""
-echo "Upload $DMG to your GitHub Release."
+echo "Upload $DMG and $CHECKSUM to your GitHub Release."

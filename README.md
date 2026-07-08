@@ -210,7 +210,7 @@ eating your RAM:
 
 ## Install
 
-1. Download the latest **`FinderFlow-1.3.dmg`** from
+1. Download the latest **`FinderFlow-1.4.dmg`** from
    [**Releases**](../../releases/latest) and open it.
 2. Drag **FinderFlow** into **Applications**.
 3. **First launch (one-time Gatekeeper step).** FinderFlow is free and isn't
@@ -297,6 +297,37 @@ all appreciated:
 This app is **ad-hoc signed and not notarized** (no paid Apple Developer
 account), which is why the one-time Gatekeeper step is needed. To ship it without
 that prompt, sign with a Developer ID certificate and notarize.
+
+## Security & updates
+
+In-app updates are optional and can be turned off in **Settings → Updates**.
+
+**Where updates come from**
+
+- Only from official [**GitHub Releases**](https://github.com/Gtarafdar/FinderFlow/releases)
+  on `Gtarafdar/FinderFlow` — hardcoded in the app, not user-configurable.
+- Downloads use **HTTPS** (GitHub’s TLS).
+
+**Integrity check**
+
+- Every release ships a companion `FinderFlow-x.y.dmg.sha256` file.
+- Before installing, the app **verifies the DMG’s SHA-256 hash** against that file.
+- If the checksum is missing or doesn’t match, the update is **blocked**.
+
+**What this means for you**
+
+- Same trust model as downloading the DMG manually from GitHub — you trust the
+  maintainer’s releases.
+- A public repo does **not** weaken security; the updater uses read-only APIs and
+  ships no secrets.
+- Auto-update makes a compromised release reach users faster — protect your
+  GitHub account with **2FA** and only publish releases you built yourself.
+
+**What we don’t verify (yet)**
+
+- Apple Developer ID signatures or notarization (requires a paid Apple account).
+- For maximum assurance, compare the published SHA-256 on the release page with
+  a hash you compute locally: `shasum -a 256 FinderFlow-x.y.dmg`.
 
 ## License
 

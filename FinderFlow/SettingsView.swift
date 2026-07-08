@@ -63,14 +63,69 @@ enum DefaultFolderHandler {
 }
 
 struct SettingsView: View {
+    @ObservedObject private var updateManager = UpdateManager.shared
     @State private var isDefault = DefaultFolderHandler.isDefault
     @State private var working = false
     @State private var statusMessage: String?
+    @State private var updateStatusMessage: String?
 
     @AppStorage("ffEditorSniffUnknown") private var sniffUnknown = true
+    @AppStorage(UserPreferences.viewModeKey)       private var viewModeRaw    = UserPreferences.defaultViewMode.rawValue
+    @AppStorage(UserPreferences.sortFieldKey)      private var sortFieldRaw   = UserPreferences.defaultSortField.rawValue
+    @AppStorage(UserPreferences.sortAscendingKey)  private var sortAscending  = UserPreferences.defaultSortAscending
+    @AppStorage(UserPreferences.groupByKey)        private var groupByRaw     = UserPreferences.defaultGroupBy.rawValue
+    @AppStorage(UserPreferences.folderOrderKey)    private var folderOrderRaw = UserPreferences.defaultFolderOrder.rawValue
+
+    private var autoCheckBinding: Binding<Bool> {
+        Binding(
+            get: { updateManager.autoCheckEnabled },
+            set: { updateManager.autoCheckEnabled = $0 }
+        )
+    }
 
     var body: some View {
         Form {
+            Section("Updates") {
+                LabeledContent("Version", value: updateManager.currentVersion)
+                Toggle("Check for updates automatically", isOn: autoCheckBinding)
+                Button("Check for Updates…") {
+                    updateStatusMessage = nil
+                    Task {
+                        await updateManager.checkForUpdates(force: true)
+                        switch updateManager.phase {
+                        case .upToDate:
+                            updateStatusMessage = "You're on the latest version."
+                        case .available(let v, _, _):
+                            updateStatusMessage = "Version \(v) is available — use the banner in the main window to install."
+                        case .error(let m):
+                            updateStatusMessage = m
+                        default:
+                            break
+                        }
+                    }
+                }
+                if let updateStatusMessage {
+                    Text(updateStatusMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            Section("Browse defaults") {
+                Text("New installs start with Finder-like settings: list view, name sort, date-modified groups, folders on top. Reset restores those defaults.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("Reset to Finder defaults") {
+                    viewModeRaw    = UserPreferences.defaultViewMode.rawValue
+                    sortFieldRaw   = UserPreferences.defaultSortField.rawValue
+                    sortAscending  = UserPreferences.defaultSortAscending
+                    groupByRaw     = UserPreferences.defaultGroupBy.rawValue
+                    folderOrderRaw = UserPreferences.defaultFolderOrder.rawValue
+                }
+            }
+
             Section("Text editor") {
                 Toggle(isOn: $sniffUnknown) {
                     VStack(alignment: .leading, spacing: 2) {

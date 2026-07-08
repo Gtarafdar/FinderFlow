@@ -6,23 +6,32 @@ struct ContentView: View {
     @StateObject private var searchEngine  = SearchEngine()
     @StateObject private var fileOps       = FileOperationsService()
     @StateObject private var tagService    = TagService()
+    @ObservedObject private var updateManager = UpdateManager.shared
     @EnvironmentObject  var  favorites:      FavoritesService
 
     @State private var currentPath:     URL       = FileManager.default.homeDirectoryForCurrentUser
     @State private var sidebarItem:     SidebarItem?
-    @State private var viewMode:        ViewMode  = .list
-    @State private var sortField:       SortField = .name
-    @State private var sortAscending:   Bool      = true
-    @State private var showHidden:      Bool      = false
-    @State private var groupBy:         GroupBy   = .none
-    @State private var folderOrder:     FolderOrder = .foldersFirst
-    @State private var showPreview:     Bool      = false
+
+    // Persisted browse prefs — Finder-like defaults on first launch
+    @AppStorage(UserPreferences.viewModeKey)       private var viewModeRaw       = UserPreferences.defaultViewMode.rawValue
+    @AppStorage(UserPreferences.sortFieldKey)      private var sortFieldRaw      = UserPreferences.defaultSortField.rawValue
+    @AppStorage(UserPreferences.sortAscendingKey)  private var sortAscending     = UserPreferences.defaultSortAscending
+    @AppStorage(UserPreferences.groupByKey)        private var groupByRaw        = UserPreferences.defaultGroupBy.rawValue
+    @AppStorage(UserPreferences.folderOrderKey)    private var folderOrderRaw    = UserPreferences.defaultFolderOrder.rawValue
+    @AppStorage(UserPreferences.showHiddenKey)     private var showHidden        = false
+    @AppStorage(UserPreferences.showPreviewKey)    private var showPreview       = false
+    @AppStorage(UserPreferences.showColumnTreeKey) private var showColumnTree    = false
+
+    private var viewMode: ViewMode       { ViewMode.fromStorage(viewModeRaw) }
+    private var sortField: SortField     { SortField.fromStorage(sortFieldRaw) }
+    private var groupBy: GroupBy         { GroupBy.fromStorage(groupByRaw) }
+    private var folderOrder: FolderOrder { FolderOrder.fromStorage(folderOrderRaw) }
+
     @State private var selectedIDs:      Set<UUID> = []
     @State private var rawFiles:            [FileItem] = []
     @State private var searchDisplayFiles:  [FileItem] = []   // pre-computed search results (avoid reloading on every render)
     @State private var pendingSelectURL: URL?
     @State private var pendingRenameURL: URL?
-    @State private var showColumnTree:   Bool = false
     @State private var activeTagFilter:  String? = nil
     @State private var tagDisplayFiles:  [FileItem] = []
     @State private var toastItem:        ToastPayload?
@@ -66,6 +75,9 @@ struct ContentView: View {
                 .resetsCursorOnEnter()           // clears the divider's stuck resize cursor on entry
         } detail: {
             VStack(spacing: 0) {
+                if case .available(let version, _, _) = updateManager.phase {
+                    UpdateBanner(manager: updateManager, version: version)
+                }
                 PathBarView(currentPath: $currentPath)
                     .resetsCursorOnEnter()   // clear a stuck resize cursor when moving up from the file list
                 SearchScopeView(currentPath: currentPath, searchEngine: searchEngine)
@@ -78,12 +90,12 @@ struct ContentView: View {
                     onCreateFile:   promptAndCreateFile,
                     onDelete:       confirmAndDeleteSelected,
                     fileOps:        fileOps,
-                    viewMode:       $viewMode,
-                    sortField:      $sortField,
+                    viewMode:       viewModeBinding,
+                    sortField:      sortFieldBinding,
                     sortAscending:  $sortAscending,
                     showHidden:     $showHidden,
-                    groupBy:        $groupBy,
-                    folderOrder:    $folderOrder,
+                    groupBy:        groupByBinding,
+                    folderOrder:    folderOrderBinding,
                     showPreview:    $showPreview,
                     showColumnTree: $showColumnTree,
                     onReload:       reload
@@ -141,6 +153,7 @@ struct ContentView: View {
         // ── Lifecycle ───────────────────────────────────────────────────
         .onAppear {
             reload()
+            updateManager.checkIfNeeded()
             // Cold launch via "Open in FinderFlow" / default folder handler:
             // the open request may arrive before this view is listening.
             if let pending = AppDelegate.pendingNavigationURL {
@@ -151,7 +164,7 @@ struct ContentView: View {
         // Don't clear the icon cache on every navigation — NSCache evicts under
         // memory pressure automatically; keeping icons warm makes navigation fast.
         .onChange(of: currentPath)   { _, _  in reload(); selectedIDs = []; activeTagFilter = nil }
-        .onChange(of: sortField)     { _, _  in
+        .onChange(of: sortFieldRaw)     { _, _  in
             rawFiles = sortedItems(rawFiles, by: sortField, ascending: sortAscending, folderOrder: folderOrder)
             resortSearchFiles()
         }
@@ -159,7 +172,7 @@ struct ContentView: View {
             rawFiles = sortedItems(rawFiles, by: sortField, ascending: sortAscending, folderOrder: folderOrder)
             resortSearchFiles()
         }
-        .onChange(of: folderOrder)   { _, _  in
+        .onChange(of: folderOrderRaw)   { _, _  in
             rawFiles = sortedItems(rawFiles, by: sortField, ascending: sortAscending, folderOrder: folderOrder)
             resortSearchFiles()
         }
@@ -347,7 +360,7 @@ struct ContentView: View {
                 selectedIDs:      $selectedIDs,
                 pendingRenameURL: $pendingRenameURL,
                 currentPath:      currentPath,
-                sortField:        $sortField,
+                sortField:        sortFieldBinding,
                 sortAscending:    $sortAscending,
                 groupBy:          groupBy,
                 onNavigate:       navigate,
@@ -430,6 +443,21 @@ struct ContentView: View {
             merged.append(f)
         }
         return sortedItems(merged, by: sortField, ascending: sortAscending, folderOrder: folderOrder)
+    }
+
+    // MARK: - Persisted preference bindings
+
+    private var viewModeBinding: Binding<ViewMode> {
+        Binding(get: { viewMode }, set: { viewModeRaw = $0.rawValue })
+    }
+    private var sortFieldBinding: Binding<SortField> {
+        Binding(get: { sortField }, set: { sortFieldRaw = $0.rawValue })
+    }
+    private var groupByBinding: Binding<GroupBy> {
+        Binding(get: { groupBy }, set: { groupByRaw = $0.rawValue })
+    }
+    private var folderOrderBinding: Binding<FolderOrder> {
+        Binding(get: { folderOrder }, set: { folderOrderRaw = $0.rawValue })
     }
 
     // MARK: - Helpers

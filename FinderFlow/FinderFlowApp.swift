@@ -109,6 +109,14 @@ struct FinderFlowCommands: Commands {
 
             Divider()
 
+            Button("Check for Updates…") {
+                Task { @MainActor in
+                    await UpdateManager.shared.checkForUpdates(force: true)
+                }
+            }
+
+            Divider()
+
             Toggle("Launch at Login", isOn: Binding(
                 get: { launchAtLogin },
                 set: { newValue in
