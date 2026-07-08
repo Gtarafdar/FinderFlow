@@ -210,7 +210,7 @@ eating your RAM:
 
 ## Install
 
-1. Download the latest **`FinderFlow-1.0.dmg`** from
+1. Download the latest **`FinderFlow-1.2.dmg`** from
    [**Releases**](../../releases/latest) and open it.
 2. Drag **FinderFlow** into **Applications**.
 3. **First launch (one-time Gatekeeper step).** FinderFlow is free and isn't

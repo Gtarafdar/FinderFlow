@@ -2,14 +2,19 @@ import Foundation
 import AppKit
 import SwiftUI
 
-// MARK: - Date category (for grouping)
+// MARK: - Date category (Finder-style Recent / Older grouping)
 
-enum DateCategory: String, CaseIterable {
-    case today       = "Today"
-    case yesterday   = "Yesterday"
-    case thisWeek    = "Previous 7 Days"
-    case thisMonth   = "Previous 30 Days"
-    case older       = "Earlier"
+/// Matches Finder's "Group by Date" buckets — including the "Previous 90 Days"
+/// band Finder added after the old 30-day / Earlier split.
+enum DateCategory: String, CaseIterable, Identifiable {
+    case today        = "Today"
+    case yesterday    = "Yesterday"
+    case previous7    = "Previous 7 Days"
+    case previous30   = "Previous 30 Days"
+    case previous90   = "Previous 90 Days"
+    case earlier      = "Earlier"
+
+    var id: String { rawValue }
 
     static func of(_ date: Date) -> DateCategory {
         let cal = Calendar.current
@@ -17,9 +22,77 @@ enum DateCategory: String, CaseIterable {
         if cal.isDateInToday(date)     { return .today }
         if cal.isDateInYesterday(date) { return .yesterday }
         let days = cal.dateComponents([.day], from: date, to: now).day ?? 0
-        if days <= 7  { return .thisWeek }
-        if days <= 30 { return .thisMonth }
-        return .older
+        if days <= 7  { return .previous7 }
+        if days <= 30 { return .previous30 }
+        if days <= 90 { return .previous90 }
+        return .earlier
+    }
+}
+
+// MARK: - Grouping & folder order
+
+/// How items are visually sectioned. Sort field still applies *inside* each group.
+enum GroupBy: String, CaseIterable, Identifiable {
+    case none = "None"
+    case dateModified = "Date Modified"
+    case dateCreated  = "Date Created"
+    case kind         = "Kind"
+    case extension_   = "Extension"
+    case size         = "Size"
+    case nameInitial  = "Name"
+
+    var id: String { rawValue }
+
+    var menuTitle: String {
+        switch self {
+        case .none:         return "None"
+        case .dateModified: return "Date Modified"
+        case .dateCreated:  return "Date Created"
+        case .kind:         return "Kind"
+        case .extension_:   return "Extension"
+        case .size:         return "Size"
+        case .nameInitial:  return "Name"
+        }
+    }
+}
+
+/// Whether folders float above files, sink below, or mix with the sort.
+enum FolderOrder: String, CaseIterable, Identifiable {
+    case foldersFirst = "Folders on Top"
+    case filesFirst   = "Files on Top"
+    case mixed        = "Mixed (Sort Only)"
+
+    var id: String { rawValue }
+}
+
+/// A labeled section of already-sorted items used by list / icon / column views.
+struct FileGroup: Identifiable, Hashable {
+    let id: String
+    let title: String
+    let items: [FileItem]
+}
+
+/// Bucket absolute file sizes into Finder / Explorer-like bands.
+enum SizeBand: String, CaseIterable, Identifiable {
+    case folders     = "Folders"
+    case zero        = "Zero KB"
+    case tiny        = "1 KB – 100 KB"
+    case small       = "100 KB – 1 MB"
+    case medium      = "1 MB – 100 MB"
+    case large       = "100 MB – 1 GB"
+    case huge        = "Over 1 GB"
+
+    var id: String { rawValue }
+
+    static func of(_ item: FileItem) -> SizeBand {
+        if item.isDirectory { return .folders }
+        let s = item.size
+        if s <= 0          { return .zero }
+        if s < 100_000     { return .tiny }
+        if s < 1_000_000   { return .small }
+        if s < 100_000_000 { return .medium }
+        if s < 1_000_000_000 { return .large }
+        return .huge
     }
 }
 
@@ -90,6 +163,16 @@ struct FileItem: Identifiable, Hashable {
     var formattedDateCreated:  String { Self.fmt.string(from: dateCreated) }
 
     var dateCategory: DateCategory { DateCategory.of(dateModified) }
+    var dateCreatedCategory: DateCategory { DateCategory.of(dateCreated) }
+
+    /// First letter (A–Z) used by "Group by Name"; everything else → "#".
+    var nameGroupKey: String {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let first = trimmed.first else { return "#" }
+        let s = String(first).uppercased()
+        if s.range(of: "^[A-Z]$", options: .regularExpression) != nil { return s }
+        return "#"
+    }
 
     // All tag colors for this item — uses modern tagNames first (multiple colors
     // per file), falls back to the legacy labelNumber if tagNames is empty.
@@ -235,9 +318,19 @@ enum ViewMode: String, CaseIterable {
     }
 }
 
-func sortedItems(_ items: [FileItem], by field: SortField, ascending: Bool) -> [FileItem] {
+func sortedItems(_ items: [FileItem],
+                 by field: SortField,
+                 ascending: Bool,
+                 folderOrder: FolderOrder = .foldersFirst) -> [FileItem] {
     items.sorted { a, b in
-        if a.isDirectory != b.isDirectory { return a.isDirectory }
+        switch folderOrder {
+        case .foldersFirst:
+            if a.isDirectory != b.isDirectory { return a.isDirectory }
+        case .filesFirst:
+            if a.isDirectory != b.isDirectory { return !a.isDirectory }
+        case .mixed:
+            break
+        }
         let r: Bool
         switch field {
         case .name:         r = a.name.localizedCompare(b.name) == .orderedAscending
@@ -248,6 +341,71 @@ func sortedItems(_ items: [FileItem], by field: SortField, ascending: Bool) -> [
         case .ext:          r = a.fileExtension.localizedCompare(b.fileExtension) == .orderedAscending
         }
         return ascending ? r : !r
+    }
+}
+
+/// Split an already-sorted list into visible section groups.
+func groupedItems(_ items: [FileItem], by grouping: GroupBy) -> [FileGroup] {
+    guard grouping != .none, !items.isEmpty else {
+        return items.isEmpty ? [] : [FileGroup(id: "all", title: "", items: items)]
+    }
+
+    switch grouping {
+    case .none:
+        return [FileGroup(id: "all", title: "", items: items)]
+
+    case .dateModified:
+        return DateCategory.allCases.compactMap { cat in
+            let g = items.filter { $0.dateCategory == cat }
+            return g.isEmpty ? nil : FileGroup(id: "dm-\(cat.rawValue)", title: cat.rawValue, items: g)
+        }
+
+    case .dateCreated:
+        return DateCategory.allCases.compactMap { cat in
+            let g = items.filter { $0.dateCreatedCategory == cat }
+            return g.isEmpty ? nil : FileGroup(id: "dc-\(cat.rawValue)", title: cat.rawValue, items: g)
+        }
+
+    case .kind:
+        // Preserve encounter order from the sorted list so relative sort holds.
+        var order: [String] = []
+        var buckets: [String: [FileItem]] = [:]
+        for item in items {
+            let key = item.kind.isEmpty ? "Unknown" : item.kind
+            if buckets[key] == nil { order.append(key) }
+            buckets[key, default: []].append(item)
+        }
+        return order.map { FileGroup(id: "kind-\($0)", title: $0, items: buckets[$0] ?? []) }
+
+    case .extension_:
+        var order: [String] = []
+        var buckets: [String: [FileItem]] = [:]
+        for item in items {
+            let key: String
+            if item.isDirectory {
+                key = "Folders"
+            } else if item.fileExtension.isEmpty {
+                key = "Other"
+            } else {
+                key = item.fileExtension.uppercased()
+            }
+            if buckets[key] == nil { order.append(key) }
+            buckets[key, default: []].append(item)
+        }
+        return order.map { FileGroup(id: "ext-\($0)", title: $0, items: buckets[$0] ?? []) }
+
+    case .size:
+        return SizeBand.allCases.compactMap { band in
+            let g = items.filter { SizeBand.of($0) == band }
+            return g.isEmpty ? nil : FileGroup(id: "sz-\(band.rawValue)", title: band.rawValue, items: g)
+        }
+
+    case .nameInitial:
+        let keys = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ").map(String.init) + ["#"]
+        return keys.compactMap { key in
+            let g = items.filter { $0.nameGroupKey == key }
+            return g.isEmpty ? nil : FileGroup(id: "nm-\(key)", title: key, items: g)
+        }
     }
 }
 

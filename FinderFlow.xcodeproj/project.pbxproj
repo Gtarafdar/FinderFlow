@@ -24,6 +24,7 @@
 		BBBBBBBBBBBBBBBBBBBB0006 /* IconsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBBBBBBBBBBBBBB0005 /* IconsView.swift */; };
 		BBBBBBBBBBBBBBBBBBBB0008 /* ColumnsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBBBBBBBBBBBBBB0007 /* ColumnsView.swift */; };
 		BBBBBBBBBBBBBBBBBBBB000A /* StatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBBBBBBBBBBBBBBBBBB0009 /* StatusBarView.swift */; };
+		EEEEEEEEEEEEEEEEEEEE0002 /* FileDragSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEEEEEEEEEEEEEEEEEEE0001 /* FileDragSupport.swift */; };
 		CCCCCCCCCCCCCCCCCCCC0002 /* MarkdownReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCCCCCCCCCCCCCCCCCCC0001 /* MarkdownReaderView.swift */; };
 		CCCCCCCCCCCCCCCCCCCC0004 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCCCCCCCCCCCCCCCCCCC0003 /* SettingsView.swift */; };
 		CCCCCCCCCCCCCCCCCCCC0006 /* CodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCCCCCCCCCCCCCCCCCCC0005 /* CodeEditorView.swift */; };
@@ -77,6 +78,7 @@
 		BBBBBBBBBBBBBBBBBBBB0005 /* IconsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconsView.swift; sourceTree = "<group>"; };
 		BBBBBBBBBBBBBBBBBBBB0007 /* ColumnsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColumnsView.swift; sourceTree = "<group>"; };
 		BBBBBBBBBBBBBBBBBBBB0009 /* StatusBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarView.swift; sourceTree = "<group>"; };
+		EEEEEEEEEEEEEEEEEEEE0001 /* FileDragSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileDragSupport.swift; sourceTree = "<group>"; };
 		CCCCCCCCCCCCCCCCCCCC0001 /* MarkdownReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownReaderView.swift; sourceTree = "<group>"; };
 		CCCCCCCCCCCCCCCCCCCC0003 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		CCCCCCCCCCCCCCCCCCCC0005 /* CodeEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEditorView.swift; sourceTree = "<group>"; };
@@ -140,6 +142,7 @@
 				BBBBBBBBBBBBBBBBBBBB0005 /* IconsView.swift */,
 				BBBBBBBBBBBBBBBBBBBB0007 /* ColumnsView.swift */,
 				BBBBBBBBBBBBBBBBBBBB0009 /* StatusBarView.swift */,
+				EEEEEEEEEEEEEEEEEEEE0001 /* FileDragSupport.swift */,
 				CCCCCCCCCCCCCCCCCCCC0001 /* MarkdownReaderView.swift */,
 				CCCCCCCCCCCCCCCCCCCC0003 /* SettingsView.swift */,
 				CCCCCCCCCCCCCCCCCCCC0005 /* CodeEditorView.swift */,
@@ -279,6 +282,7 @@
 				BBBBBBBBBBBBBBBBBBBB0006 /* IconsView.swift in Sources */,
 				BBBBBBBBBBBBBBBBBBBB0008 /* ColumnsView.swift in Sources */,
 				BBBBBBBBBBBBBBBBBBBB000A /* StatusBarView.swift in Sources */,
+				EEEEEEEEEEEEEEEEEEEE0002 /* FileDragSupport.swift in Sources */,
 				CCCCCCCCCCCCCCCCCCCC0002 /* MarkdownReaderView.swift in Sources */,
 				CCCCCCCCCCCCCCCCCCCC0004 /* SettingsView.swift in Sources */,
 				CCCCCCCCCCCCCCCCCCCC0006 /* CodeEditorView.swift in Sources */,
@@ -404,7 +408,7 @@
 				CODE_SIGN_ENTITLEMENTS = FinderFlow/FinderFlow.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -413,7 +417,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finderflow.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -429,7 +433,7 @@
 				CODE_SIGN_ENTITLEMENTS = FinderFlow/FinderFlow.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -438,7 +442,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finderflow.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -451,7 +455,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = FinderFlowExtension/FinderFlowExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FinderFlowExtension/Info.plist;
@@ -460,7 +464,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finderflow.app.extension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -474,7 +478,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = FinderFlowExtension/FinderFlowExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FinderFlowExtension/Info.plist;
@@ -483,7 +487,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finderflow.app.extension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

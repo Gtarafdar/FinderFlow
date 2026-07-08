@@ -11,7 +11,10 @@ struct ColumnsView: View {
     @Binding var currentPath: URL
     let showHidden:     Bool
     let showColumnTree: Bool
-    let groupByDate:    Bool
+    let groupBy:        GroupBy
+    let sortField:      SortField
+    let sortAscending:  Bool
+    let folderOrder:    FolderOrder
     @ObservedObject var fileOps:   FileOperationsService
     @ObservedObject var favorites: FavoritesService
     // Search support — when isSearchActive the column browser is replaced by a flat results list
@@ -59,6 +62,7 @@ struct ColumnsView: View {
             }
             .padding(.vertical, 2)
             .contentShape(Rectangle())
+            .fileDragOut(item: item, files: searchResults, selectedIDs: [item.id])
             .onTapGesture {
                 var isDir: ObjCBool = false
                 let exists = FileManager.default.fileExists(atPath: item.url.path, isDirectory: &isDir)
@@ -132,7 +136,10 @@ struct ColumnsView: View {
             directory:      dir,
             highlightedURL: highlighted,
             showHidden:     showHidden,
-            groupByDate:    groupByDate,
+            groupBy:        groupBy,
+            sortField:      sortField,
+            sortAscending:  sortAscending,
+            folderOrder:    folderOrder,
             onSelect: { selected in
                 if selected.hasDirectoryPath {
                     columns = Array(columns.prefix(idx + 1)) + [selected]
@@ -379,28 +386,26 @@ struct ColumnPane: View {
     let directory:      URL
     let highlightedURL: URL?
     let showHidden:     Bool
-    let groupByDate:    Bool
+    let groupBy:        GroupBy
+    let sortField:      SortField
+    let sortAscending:  Bool
+    let folderOrder:    FolderOrder
     let onSelect:       (URL) -> Void
     @ObservedObject var fileOps:   FileOperationsService
     @ObservedObject var favorites: FavoritesService
 
     @State private var items: [FileItem] = []
 
-    private var dateGroups: [(DateCategory, [FileItem])] {
-        DateCategory.allCases.compactMap { cat in
-            let g = items.filter { $0.dateCategory == cat }
-            return g.isEmpty ? nil : (cat, g)
-        }
-    }
+    private var groups: [FileGroup] { groupedItems(items, by: groupBy) }
 
     var body: some View {
         List {
-            if groupByDate {
-                ForEach(dateGroups, id: \.0) { cat, groupItems in
+            if groupBy != .none {
+                ForEach(groups) { group in
                     Section {
-                        ForEach(groupItems) { item in rowFor(item) }
+                        ForEach(group.items) { item in rowFor(item) }
                     } header: {
-                        DateSectionHeader(title: cat.rawValue, count: groupItems.count)
+                        DateSectionHeader(title: group.title, count: group.items.count)
                     }
                 }
             } else {
@@ -420,6 +425,9 @@ struct ColumnPane: View {
         .onAppear    { reload() }
         .onChange(of: directory)  { _, _ in reload() }
         .onChange(of: showHidden) { _, _ in reload() }
+        .onChange(of: sortField)     { _, _ in reload() }
+        .onChange(of: sortAscending) { _, _ in reload() }
+        .onChange(of: folderOrder)   { _, _ in reload() }
         .onReceive(NotificationCenter.default.publisher(for: .refreshDirectory)) { notif in
             if let url = notif.object as? URL, url == directory { reload() }
         }
@@ -429,6 +437,7 @@ struct ColumnPane: View {
     private func rowFor(_ item: FileItem) -> some View {
         ColumnRow(item: item, isHighlighted: highlightedURL == item.url)
             .contentShape(Rectangle())
+            .fileDragOut(item: item, files: items, selectedIDs: highlightedURL == item.url ? [item.id] : [])
             .simultaneousGesture(TapGesture(count: 2).onEnded {
                 if !item.isDirectory { NSWorkspace.shared.open(item.url) }
             })
@@ -506,9 +515,14 @@ struct ColumnPane: View {
     // MARK: - Helpers
 
     private func reload() {
+        let field = sortField
+        let asc   = sortAscending
+        let fold  = folderOrder
+        let hidden = showHidden
+        let dir = directory
         DispatchQueue.global(qos: .userInitiated).async {
-            let loaded = sortedItems(loadItems(at: directory, showHidden: showHidden),
-                                     by: .name, ascending: true)
+            let loaded = sortedItems(loadItems(at: dir, showHidden: hidden),
+                                     by: field, ascending: asc, folderOrder: fold)
             DispatchQueue.main.async { items = loaded }
         }
     }

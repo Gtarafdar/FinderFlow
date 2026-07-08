@@ -14,7 +14,8 @@ struct ContentView: View {
     @State private var sortField:       SortField = .name
     @State private var sortAscending:   Bool      = true
     @State private var showHidden:      Bool      = false
-    @State private var groupByDate:     Bool      = false
+    @State private var groupBy:         GroupBy   = .none
+    @State private var folderOrder:     FolderOrder = .foldersFirst
     @State private var showPreview:     Bool      = false
     @State private var selectedIDs:      Set<UUID> = []
     @State private var rawFiles:            [FileItem] = []
@@ -80,7 +81,8 @@ struct ContentView: View {
                     sortField:      $sortField,
                     sortAscending:  $sortAscending,
                     showHidden:     $showHidden,
-                    groupByDate:    $groupByDate,
+                    groupBy:        $groupBy,
+                    folderOrder:    $folderOrder,
                     showPreview:    $showPreview,
                     showColumnTree: $showColumnTree,
                     onReload:       reload
@@ -149,21 +151,25 @@ struct ContentView: View {
         // memory pressure automatically; keeping icons warm makes navigation fast.
         .onChange(of: currentPath)   { _, _  in reload(); selectedIDs = []; activeTagFilter = nil }
         .onChange(of: sortField)     { _, _  in
-            rawFiles = sortedItems(rawFiles, by: sortField, ascending: sortAscending)
+            rawFiles = sortedItems(rawFiles, by: sortField, ascending: sortAscending, folderOrder: folderOrder)
             resortSearchFiles()
         }
         .onChange(of: sortAscending) { _, _  in
-            rawFiles = sortedItems(rawFiles, by: sortField, ascending: sortAscending)
+            rawFiles = sortedItems(rawFiles, by: sortField, ascending: sortAscending, folderOrder: folderOrder)
+            resortSearchFiles()
+        }
+        .onChange(of: folderOrder)   { _, _  in
+            rawFiles = sortedItems(rawFiles, by: sortField, ascending: sortAscending, folderOrder: folderOrder)
             resortSearchFiles()
         }
         .onChange(of: showHidden)    { _, _  in reload() }
         // Recompute Spotlight search results in background (never on the render thread)
         .onChange(of: searchEngine.results) { _, results in
             if results.isEmpty { searchDisplayFiles = []; return }
-            let field = sortField; let asc = sortAscending
+            let field = sortField; let asc = sortAscending; let fold = folderOrder
             DispatchQueue.global(qos: .userInitiated).async {
                 let files = sortedItems(results.compactMap { FileItem.load(from: $0) },
-                                        by: field, ascending: asc)
+                                        by: field, ascending: asc, folderOrder: fold)
                 DispatchQueue.main.async { searchDisplayFiles = files }
             }
         }
@@ -231,10 +237,10 @@ struct ContentView: View {
         }
         // Convert Spotlight tag results to FileItems in background
         .onChange(of: tagService.taggedFileURLs) { _, urls in
-            let field = sortField; let asc = sortAscending
+            let field = sortField; let asc = sortAscending; let fold = folderOrder
             DispatchQueue.global(qos: .userInitiated).async {
                 let files = sortedItems(urls.compactMap { FileItem.load(from: $0) },
-                                        by: field, ascending: asc)
+                                        by: field, ascending: asc, folderOrder: fold)
                 DispatchQueue.main.async { tagDisplayFiles = files }
             }
         }
@@ -342,7 +348,7 @@ struct ContentView: View {
                 currentPath:      currentPath,
                 sortField:        $sortField,
                 sortAscending:    $sortAscending,
-                groupByDate:      groupByDate,
+                groupBy:          groupBy,
                 onNavigate:       navigate,
                 onReload:         reload,
                 fileOps:          fileOps,
@@ -353,6 +359,7 @@ struct ContentView: View {
                 files:       displayFiles,
                 selectedIDs: $selectedIDs,
                 currentPath: currentPath,
+                groupBy:     groupBy,
                 onNavigate:  navigate,
                 onReload:    reload,
                 fileOps:     fileOps,
@@ -363,7 +370,10 @@ struct ContentView: View {
                 currentPath:    $currentPath,
                 showHidden:     showHidden,
                 showColumnTree: showColumnTree,
-                groupByDate:    groupByDate,
+                groupBy:        groupBy,
+                sortField:      sortField,
+                sortAscending:  sortAscending,
+                folderOrder:    folderOrder,
                 fileOps:        fileOps,
                 favorites:      favorites,
                 searchResults:  displayFiles,
@@ -416,7 +426,7 @@ struct ContentView: View {
         for f in tagDisplayFiles + local where seen.insert(f.url.path).inserted {
             merged.append(f)
         }
-        return sortedItems(merged, by: sortField, ascending: sortAscending)
+        return sortedItems(merged, by: sortField, ascending: sortAscending, folderOrder: folderOrder)
     }
 
     // MARK: - Helpers
@@ -459,9 +469,9 @@ struct ContentView: View {
 
     private func resortSearchFiles() {
         guard !searchDisplayFiles.isEmpty else { return }
-        let field = sortField; let asc = sortAscending
+        let field = sortField; let asc = sortAscending; let fold = folderOrder
         DispatchQueue.global(qos: .userInitiated).async {
-            let sorted = sortedItems(searchDisplayFiles, by: field, ascending: asc)
+            let sorted = sortedItems(searchDisplayFiles, by: field, ascending: asc, folderOrder: fold)
             DispatchQueue.main.async { searchDisplayFiles = sorted }
         }
     }
@@ -473,8 +483,9 @@ struct ContentView: View {
         let hidden = showHidden
         let field  = sortField
         let asc    = sortAscending
+        let fold   = folderOrder
         DispatchQueue.global(qos: .userInitiated).async {
-            let items = sortedItems(loadItems(at: path, showHidden: hidden), by: field, ascending: asc)
+            let items = sortedItems(loadItems(at: path, showHidden: hidden), by: field, ascending: asc, folderOrder: fold)
             DispatchQueue.main.async {
                 rawFiles = items
                 then?()

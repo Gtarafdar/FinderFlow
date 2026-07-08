@@ -28,7 +28,8 @@ struct QuickActionsToolbar: View {
     @Binding var sortField:      SortField
     @Binding var sortAscending:  Bool
     @Binding var showHidden:     Bool
-    @Binding var groupByDate:    Bool
+    @Binding var groupBy:        GroupBy
+    @Binding var folderOrder:    FolderOrder
     @Binding var showPreview:    Bool
     @Binding var showColumnTree: Bool
     let onReload: () -> Void
@@ -110,12 +111,20 @@ struct QuickActionsToolbar: View {
             .toggleStyle(.button).buttonStyle(.borderless)
             .help(showHidden ? "Hide hidden files" : "Show hidden files")
 
-            Toggle(isOn: $groupByDate) {
-                Label("Group by Date", systemImage: "calendar")
-                    .labelStyle(.iconOnly)
+            Menu {
+                Picker("Group By", selection: $groupBy) {
+                    ForEach(GroupBy.allCases) { g in
+                        Text(g.menuTitle).tag(g)
+                    }
+                }
+            } label: {
+                Image(systemName: groupBy == .none ? "rectangle.3.group" : "rectangle.3.group.fill")
+                    .font(.system(size: 13))
+                    .foregroundStyle(groupBy == .none ? Color.primary : Color.accentColor)
             }
-            .toggleStyle(.button).buttonStyle(.borderless)
-            .help("Group files by date")
+            .menuStyle(.borderlessButton)
+            .frame(width: 28)
+            .help(groupBy == .none ? "Group By" : "Grouped by \(groupBy.menuTitle)")
 
             Toggle(isOn: $showPreview) {
                 Label("File Preview", systemImage: showPreview ? "doc.richtext.fill" : "doc.richtext")
@@ -146,7 +155,7 @@ struct QuickActionsToolbar: View {
 
             Spacer()
 
-            // ── Sort ──────────────────────────────────────────────────────
+            // ── Sort / folder order ───────────────────────────────────────
             HStack(spacing: 2) {
                 Picker("Sort", selection: $sortField) {
                     ForEach(SortField.allCases) { f in Text(f.rawValue).tag(f) }
@@ -158,6 +167,21 @@ struct QuickActionsToolbar: View {
                 }
                 .buttonStyle(.borderless)
                 .help(sortAscending ? "Ascending" : "Descending")
+
+                Menu {
+                    Picker("Folders", selection: $folderOrder) {
+                        ForEach(FolderOrder.allCases) { o in
+                            Text(o.rawValue).tag(o)
+                        }
+                    }
+                } label: {
+                    Image(systemName: folderOrder == .foldersFirst ? "folder.fill"
+                          : (folderOrder == .filesFirst ? "doc.fill" : "arrow.up.arrow.down"))
+                        .font(.caption)
+                }
+                .menuStyle(.borderlessButton)
+                .frame(width: 28)
+                .help("Folder / file order: \(folderOrder.rawValue)")
             }
 
             Divider().frame(height: 20)

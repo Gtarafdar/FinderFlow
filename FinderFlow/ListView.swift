@@ -13,7 +13,7 @@ struct ListView: View {
     let currentPath:   URL
     @Binding var sortField:     SortField
     @Binding var sortAscending: Bool
-    let groupByDate:   Bool
+    let groupBy:       GroupBy
     let onNavigate:    (URL) -> Void
     let onReload:      () -> Void
     @ObservedObject var fileOps:   FileOperationsService
@@ -26,12 +26,13 @@ struct ListView: View {
     @FocusState private var renameActive: Bool
 
     var body: some View {
-        if groupByDate {
-            DateGroupedListView(
+        if groupBy != .none {
+            GroupedListView(
                 files:            files,
                 selectedIDs:      $selectedIDs,
                 pendingRenameURL: $pendingRenameURL,
                 currentPath:      currentPath,
+                groupBy:          groupBy,
                 onNavigate:       onNavigate,
                 onReload:         onReload,
                 fileOps:          fileOps,
@@ -72,6 +73,7 @@ struct ListView: View {
                     }
                     TagDotsView(colors: item.tagColors, size: 10)
                 }
+                .fileDragOut(item: item, files: files, selectedIDs: selectedIDs)
             }
             .width(min: 140, ideal: 280, max: 600)
 
@@ -278,11 +280,12 @@ struct ListView: View {
 
 // MARK: - Date-grouped list view
 
-struct DateGroupedListView: View {
+struct GroupedListView: View {
     let files:       [FileItem]
     @Binding var selectedIDs:      Set<UUID>
     @Binding var pendingRenameURL: URL?
     let currentPath: URL
+    let groupBy:     GroupBy
     let onNavigate:  (URL) -> Void
     let onReload:    () -> Void
     @ObservedObject var fileOps:   FileOperationsService
@@ -293,19 +296,14 @@ struct DateGroupedListView: View {
     @State private var renameCancelled: Bool   = false
     @FocusState private var renameActive: Bool
 
-    private var groups: [(DateCategory, [FileItem])] {
-        DateCategory.allCases.compactMap { cat in
-            let items = files.filter { $0.dateCategory == cat }
-            return items.isEmpty ? nil : (cat, items)
-        }
-    }
+    private var groups: [FileGroup] { groupedItems(files, by: groupBy) }
 
     var body: some View {
         ScrollViewReader { proxy in
         List(selection: $selectedIDs) {
-            ForEach(groups, id: \.0) { cat, items in
+            ForEach(groups) { group in
                 Section {
-                    ForEach(items) { item in
+                    ForEach(group.items) { item in
                         ZStack(alignment: .leading) {
                             GroupedRow(item: item, isSelected: selectedIDs.contains(item.id))
                                 .opacity(renamingID == item.id ? 0 : 1)
@@ -329,6 +327,7 @@ struct DateGroupedListView: View {
                         }
                         .tag(item.id)
                         .id(item.id)
+                        .fileDragOut(item: item, files: files, selectedIDs: selectedIDs)
                         .onTapGesture(count: 2) { onNavigate(item.url) }
                         .onTapGesture {
                             selectedIDs = selectedIDs.contains(item.id)
@@ -337,7 +336,7 @@ struct DateGroupedListView: View {
                         .contextMenu { listContextMenu(item: item) }
                     }
                 } header: {
-                    DateSectionHeader(title: cat.rawValue, count: items.count)
+                    DateSectionHeader(title: group.title, count: group.items.count)
                 }
             }
         }
@@ -408,10 +407,12 @@ struct DateGroupedListView: View {
         Button(targets.count > 1 ? "Compress \(targets.count) Items" : "Compress \"\(item.name)\"") {
             fileOps.compress(urls, reload: onReload)
         }
-        if item.isArchive { Button("Extract Here") { fileOps.extract(item.url, reload: onReload) } }
+        if targets.count == 1, item.isArchive {
+            Button("Extract Here") { fileOps.extract(item.url, reload: onReload) }
+        }
         Divider()
-        Button("Cut")   { fileOps.cut(urls) }
-        Button("Copy")  { fileOps.copy(urls) }
+        Button("Cut")  { fileOps.cut(urls) }
+        Button("Copy") { fileOps.copy(urls) }
         Button("Paste") {
             let dest = (targets.count == 1 && item.isDirectory) ? item.url : currentPath
             fileOps.paste(to: dest, reload: onReload)
@@ -421,7 +422,7 @@ struct DateGroupedListView: View {
         Menu("Share") {
             Button("AirDrop") { fileOps.shareViaAirDrop(urls) }
             Divider()
-            Button("Share…")  { fileOps.showShareSheet(for: urls) }
+            Button("Share…") { fileOps.showShareSheet(for: urls) }
         }
         Divider()
         Menu("Tags") {
@@ -438,7 +439,7 @@ struct DateGroupedListView: View {
         Button("Show in Finder") {
             NSWorkspace.shared.selectFile(item.url.path, inFileViewerRootedAtPath: "")
         }
-        Button("Copy Path") {
+        Button(targets.count > 1 ? "Copy \(targets.count) Paths" : "Copy Path") {
             fileOps.copyPath(urls.map(\.path).joined(separator: "\n"))
         }
         Divider()

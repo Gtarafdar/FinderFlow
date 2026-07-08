@@ -5,6 +5,23 @@ relative to the 1.0 release.
 
 ---
 
+## 1.2 — Drag files out + Finder-style grouping
+
+- **Drag files out of FinderFlow** — grab any file or folder from List, Icons, or
+  Column view and drop it on the Desktop, another Finder window, an upload dialog,
+  a browser, Slack, Mail, etc. Multi-select drags the whole selection (Finder
+  behaviour). Cut / Copy / Paste still work as before.
+- **Finder-style date groups** — Group by Date Modified / Date Created now uses
+  Today, Yesterday, Previous 7 Days, Previous 30 Days, **Previous 90 Days**, and
+  Earlier — matching modern Finder.
+- **Richer Group By menu** — None, Date Modified, Date Created, Kind, Extension,
+  Size, or Name (A–Z). Works in **List, Icons, and Columns**.
+- **Folders first / Files first / Mixed** — independent of the sort field, so you
+  can keep Name sort while floating folders above (or below) files, or mix them.
+- Sort-by picker and ascending/descending are unchanged; grouping sits on top.
+
+---
+
 ## 1.1 — Markdown reader in its own window
 
 - **Draggable & resizable Markdown reader** — the Markdown reader/editor now

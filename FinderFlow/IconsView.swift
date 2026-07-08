@@ -4,6 +4,7 @@ struct IconsView: View {
     let files:       [FileItem]
     @Binding var selectedIDs: Set<UUID>
     let currentPath: URL
+    let groupBy:     GroupBy
     let onNavigate:  (URL) -> Void
     let onReload:    () -> Void
     @ObservedObject var fileOps:   FileOperationsService
@@ -15,18 +16,33 @@ struct IconsView: View {
         [GridItem(.adaptive(minimum: iconSize + 20, maximum: iconSize + 40), spacing: 8)]
     }
 
+    private var groups: [FileGroup] { groupedItems(files, by: groupBy) }
+
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
-                LazyVGrid(columns: columns, spacing: 12) {
-                    ForEach(files) { item in
-                        IconCell(item: item, iconSize: iconSize, isSelected: selectedIDs.contains(item.id))
-                            .onTapGesture(count: 2) { onNavigate(item.url) }
-                            .onTapGesture         { selectedIDs = [item.id] }
-                            .contextMenu { iconContextMenu(item: item) }
+                LazyVStack(alignment: .leading, spacing: 16, pinnedViews: [.sectionHeaders]) {
+                    ForEach(groups) { group in
+                        Section {
+                            LazyVGrid(columns: columns, spacing: 12) {
+                                ForEach(group.items) { item in
+                                    IconCell(item: item, iconSize: iconSize, isSelected: selectedIDs.contains(item.id))
+                                        .fileDragOut(item: item, files: files, selectedIDs: selectedIDs)
+                                        .onTapGesture(count: 2) { onNavigate(item.url) }
+                                        .onTapGesture         { selectedIDs = [item.id] }
+                                        .contextMenu { iconContextMenu(item: item) }
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                        } header: {
+                            if groupBy != .none, !group.title.isEmpty {
+                                DateSectionHeader(title: group.title, count: group.items.count)
+                                    .padding(.horizontal, 8)
+                            }
+                        }
                     }
                 }
-                .padding(16)
+                .padding(.vertical, 12)
             }
             .background(Color(nsColor: .textBackgroundColor))
             .background(
