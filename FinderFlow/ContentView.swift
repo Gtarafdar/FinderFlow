@@ -27,6 +27,7 @@ struct ContentView: View {
     @State private var tagDisplayFiles:  [FileItem] = []
     @State private var toastItem:        ToastPayload?
     @State private var errorMsg:         String?
+    @State private var reloadGeneration: UInt = 0
 
     // Derived selected item for preview
     private var selectedItem: FileItem? {
@@ -36,7 +37,7 @@ struct ContentView: View {
 
     // Selected folder URL — used by IDE toolbar buttons to open the right folder
     private var selectedFolderURL: URL? {
-        guard let item = selectedItem, item.isDirectory else { return nil }
+        guard let item = selectedItem, item.isBrowsableFolder else { return nil }
         return item.url
     }
 
@@ -45,7 +46,7 @@ struct ContentView: View {
     private var activeDestination: URL {
         if selectedIDs.count == 1,
            let item = displayFiles.first(where: { selectedIDs.contains($0.id) }),
-           item.isDirectory {
+           item.isBrowsableFolder {
             return item.url
         }
         return currentPath
@@ -350,6 +351,7 @@ struct ContentView: View {
                 sortAscending:    $sortAscending,
                 groupBy:          groupBy,
                 onNavigate:       navigate,
+                onBrowseInto:     { currentPath = $0 },
                 onReload:         reload,
                 fileOps:          fileOps,
                 favorites:        favorites
@@ -361,6 +363,7 @@ struct ContentView: View {
                 currentPath: currentPath,
                 groupBy:     groupBy,
                 onNavigate:  navigate,
+                onBrowseInto: { currentPath = $0 },
                 onReload:    reload,
                 fileOps:     fileOps,
                 favorites:   favorites
@@ -432,12 +435,7 @@ struct ContentView: View {
     // MARK: - Helpers
 
     private func navigate(_ url: URL) {
-        // Use FileManager to reliably detect directories — URL.hasDirectoryPath
-        // only returns true when the path ends with "/" which FileManager results
-        // do NOT do, so folders from search results would silently fall through.
-        var isDir: ObjCBool = false
-        let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir)
-        if exists && isDir.boolValue {
+        if FileItem.isBrowsableFolder(url) {
             currentPath = url
         } else if url.pathExtension.lowercased() == "md" {
             MarkdownWindowManager.shared.open(url)
@@ -479,6 +477,8 @@ struct ContentView: View {
     func reload() { _reload(then: nil) }
 
     private func _reload(then: (() -> Void)?) {
+        reloadGeneration &+= 1
+        let gen    = reloadGeneration
         let path   = currentPath
         let hidden = showHidden
         let field  = sortField
@@ -487,6 +487,7 @@ struct ContentView: View {
         DispatchQueue.global(qos: .userInitiated).async {
             let items = sortedItems(loadItems(at: path, showHidden: hidden), by: field, ascending: asc, folderOrder: fold)
             DispatchQueue.main.async {
+                guard gen == reloadGeneration else { return }
                 rawFiles = items
                 then?()
             }

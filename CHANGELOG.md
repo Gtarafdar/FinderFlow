@@ -5,6 +5,18 @@ relative to the 1.0 release.
 
 ---
 
+## 1.3 — Launch apps + faster folder browsing
+
+- **Double-click `.app` bundles now launch the app** instead of opening the
+  package folder (Finder behaviour). Other opaque packages (.pages, .key, …)
+  open with their default app too. **Show Package Contents** still works from
+  the right-click menu when you need to browse inside.
+- **Faster folder navigation** — directory listings use prefetched metadata,
+  stale reloads are cancelled when you click through folders quickly, and the
+  icon cache is larger so scrolling back feels snappier.
+
+---
+
 ## 1.2 — Drag files out + Finder-style grouping
 
 - **Drag files out of FinderFlow** — grab any file or folder from List, Icons, or

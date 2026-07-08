@@ -15,6 +15,7 @@ struct ListView: View {
     @Binding var sortAscending: Bool
     let groupBy:       GroupBy
     let onNavigate:    (URL) -> Void
+    let onBrowseInto:  (URL) -> Void
     let onReload:      () -> Void
     @ObservedObject var fileOps:   FileOperationsService
     @ObservedObject var favorites: FavoritesService
@@ -34,6 +35,7 @@ struct ListView: View {
                 currentPath:      currentPath,
                 groupBy:          groupBy,
                 onNavigate:       onNavigate,
+                onBrowseInto:     onBrowseInto,
                 onReload:         onReload,
                 fileOps:          fileOps,
                 favorites:        favorites
@@ -191,11 +193,10 @@ struct ListView: View {
             let urls = sel.map(\.url)
 
             Button("Open")               { onNavigate(item.url) }
-            if item.isDirectory {
+            if item.isBrowsableFolder {
                 Button("Open in New Window") { NSWorkspace.shared.open(item.url) }
-                if NSWorkspace.shared.isFilePackage(atPath: item.url.path) {
-                    Button("Show Package Contents") { onNavigate(item.url) }
-                }
+            } else if item.isPackage {
+                Button("Show Package Contents") { onBrowseInto(item.url) }
             }
             Divider()
             Button("Quick Look")         { quickLook(ids: ids) }
@@ -287,6 +288,7 @@ struct GroupedListView: View {
     let currentPath: URL
     let groupBy:     GroupBy
     let onNavigate:  (URL) -> Void
+    let onBrowseInto:(URL) -> Void
     let onReload:    () -> Void
     @ObservedObject var fileOps:   FileOperationsService
     @ObservedObject var favorites: FavoritesService
@@ -396,6 +398,11 @@ struct GroupedListView: View {
         let urls    = targets.map(\.url)
 
         Button("Open")       { onNavigate(item.url) }
+        if item.isBrowsableFolder {
+            Button("Open in New Window") { NSWorkspace.shared.open(item.url) }
+        } else if item.isPackage {
+            Button("Show Package Contents") { onBrowseInto(item.url) }
+        }
         Button("Quick Look") { QuickLookController.shared.show(urls) }
         Button("Get Info")   { showGetInfoInFinder([item.url]) }
         Divider()
@@ -429,7 +436,7 @@ struct GroupedListView: View {
             TagMenuContent(targets: targets, fileOps: fileOps, onReload: onReload)
         }
         Divider()
-        if item.isDirectory {
+        if item.isBrowsableFolder {
             if favorites.isPinned(item.url) {
                 Button("Remove from Sidebar") { favorites.unpin(item.url) }
             } else {

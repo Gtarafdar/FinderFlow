@@ -54,7 +54,7 @@ struct ColumnsView: View {
                         .lineLimit(1)
                 }
                 Spacer()
-                if item.isDirectory {
+                if item.isBrowsableFolder {
                     Image(systemName: "chevron.right")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
@@ -64,9 +64,7 @@ struct ColumnsView: View {
             .contentShape(Rectangle())
             .fileDragOut(item: item, files: searchResults, selectedIDs: [item.id])
             .onTapGesture {
-                var isDir: ObjCBool = false
-                let exists = FileManager.default.fileExists(atPath: item.url.path, isDirectory: &isDir)
-                if exists && isDir.boolValue {
+                if FileItem.isBrowsableFolder(item.url) {
                     currentPath = item.url
                 } else {
                     NSWorkspace.shared.open(item.url)
@@ -141,15 +139,19 @@ struct ColumnsView: View {
             sortAscending:  sortAscending,
             folderOrder:    folderOrder,
             onSelect: { selected in
-                if selected.hasDirectoryPath {
+                if FileItem.isBrowsableFolder(selected) {
                     columns = Array(columns.prefix(idx + 1)) + [selected]
                     currentPath = selected
                     selectedFileURL = nil
                 } else {
-                    // File selected: trim columns back to this level, show preview
                     columns = Array(columns.prefix(idx + 1))
                     selectedFileURL = selected
                 }
+            },
+            onBrowseInto: { url in
+                columns = Array(columns.prefix(idx + 1)) + [url]
+                currentPath = url
+                selectedFileURL = nil
             },
             fileOps:   fileOps,
             favorites: favorites
@@ -168,14 +170,13 @@ struct ColumnsView: View {
     @ViewBuilder
     private func columnContextMenu(item: FileItem, directory: URL) -> some View {
         Button("Open") {
-            var isDir: ObjCBool = false
-            if FileManager.default.fileExists(atPath: item.url.path, isDirectory: &isDir), isDir.boolValue {
+            if FileItem.isBrowsableFolder(item.url) {
                 currentPath = item.url
             } else {
                 NSWorkspace.shared.open(item.url)
             }
         }
-        if item.isDirectory {
+        if item.isBrowsableFolder {
             Button("Open in New Window") { NSWorkspace.shared.open(item.url) }
         }
         Divider()
@@ -391,10 +392,12 @@ struct ColumnPane: View {
     let sortAscending:  Bool
     let folderOrder:    FolderOrder
     let onSelect:       (URL) -> Void
+    let onBrowseInto:   (URL) -> Void
     @ObservedObject var fileOps:   FileOperationsService
     @ObservedObject var favorites: FavoritesService
 
     @State private var items: [FileItem] = []
+    @State private var reloadGeneration: UInt = 0
 
     private var groups: [FileGroup] { groupedItems(items, by: groupBy) }
 
@@ -439,7 +442,11 @@ struct ColumnPane: View {
             .contentShape(Rectangle())
             .fileDragOut(item: item, files: items, selectedIDs: highlightedURL == item.url ? [item.id] : [])
             .simultaneousGesture(TapGesture(count: 2).onEnded {
-                if !item.isDirectory { NSWorkspace.shared.open(item.url) }
+                if FileItem.isBrowsableFolder(item.url) {
+                    onSelect(item.url)
+                } else {
+                    NSWorkspace.shared.open(item.url)
+                }
             })
             .simultaneousGesture(TapGesture(count: 1).onEnded {
                 onSelect(item.url)
@@ -452,11 +459,10 @@ struct ColumnPane: View {
     @ViewBuilder
     private func columnContextMenu(item: FileItem) -> some View {
         Button("Open") { onSelect(item.url) }
-        if item.isDirectory {
+        if item.isBrowsableFolder {
             Button("Open in New Window") { NSWorkspace.shared.open(item.url) }
-            if NSWorkspace.shared.isFilePackage(atPath: item.url.path) {
-                Button("Show Package Contents") { onSelect(item.url) }
-            }
+        } else if item.isPackage {
+            Button("Show Package Contents") { onBrowseInto(item.url) }
         }
         Divider()
         Button("Quick Look") { QuickLookController.shared.show([item.url]) }
@@ -515,15 +521,20 @@ struct ColumnPane: View {
     // MARK: - Helpers
 
     private func reload() {
-        let field = sortField
-        let asc   = sortAscending
-        let fold  = folderOrder
+        reloadGeneration &+= 1
+        let gen    = reloadGeneration
+        let field  = sortField
+        let asc    = sortAscending
+        let fold   = folderOrder
         let hidden = showHidden
-        let dir = directory
+        let dir    = directory
         DispatchQueue.global(qos: .userInitiated).async {
             let loaded = sortedItems(loadItems(at: dir, showHidden: hidden),
                                      by: field, ascending: asc, folderOrder: fold)
-            DispatchQueue.main.async { items = loaded }
+            DispatchQueue.main.async {
+                guard gen == reloadGeneration else { return }
+                items = loaded
+            }
         }
     }
 
@@ -559,7 +570,7 @@ struct ColumnRow: View {
             Text(item.name).font(.system(size: 12)).lineLimit(1)
             TagDotsView(colors: item.tagColors, size: 9)
             Spacer()
-            if item.isDirectory {
+            if item.isBrowsableFolder {
                 Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.secondary)
             }
         }

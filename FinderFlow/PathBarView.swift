@@ -79,7 +79,8 @@ struct PathBarView: View {
         let expanded = NSString(string: editText).expandingTildeInPath
         let url = URL(fileURLWithPath: expanded)
         var isDir: ObjCBool = false
-        if FileManager.default.fileExists(atPath: expanded, isDirectory: &isDir), isDir.boolValue {
+        if FileManager.default.fileExists(atPath: expanded, isDirectory: &isDir),
+           isDir.boolValue, FileItem.isBrowsableFolder(url) {
             currentPath = url
         }
         isEditing = false

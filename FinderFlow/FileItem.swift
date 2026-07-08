@@ -85,7 +85,7 @@ enum SizeBand: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     static func of(_ item: FileItem) -> SizeBand {
-        if item.isDirectory { return .folders }
+        if item.isBrowsableFolder { return .folders }
         let s = item.size
         if s <= 0          { return .zero }
         if s < 100_000     { return .tiny }
@@ -103,6 +103,7 @@ struct FileItem: Identifiable, Hashable {
     let url:           URL
     let name:          String
     let isDirectory:   Bool
+    let isPackage:     Bool      // opaque bundle (.app, .pages, …) — open, don't browse
     let isHidden:      Bool
     let size:          Int64
     let dateModified:  Date
@@ -114,23 +115,43 @@ struct FileItem: Identifiable, Hashable {
     let tagNames:    [String]   // macOS modern tags (multiple per file)
 
     static let resourceKeys: [URLResourceKey] = [
-        .isDirectoryKey, .fileSizeKey, .contentModificationDateKey,
+        .isDirectoryKey, .isPackageKey, .fileSizeKey, .contentModificationDateKey,
         .creationDateKey, .localizedTypeDescriptionKey, .isHiddenKey,
         .labelNumberKey, .tagNamesKey,
     ]
 
+    /// True when double-click should navigate into this item like a normal folder.
+    /// Application bundles and other opaque packages launch instead (Finder behaviour).
+    var isBrowsableFolder: Bool { isDirectory && !isPackage }
+
+    /// URL-level check used before a `FileItem` exists (navigate / open handlers).
+    static func isBrowsableFolder(_ url: URL) -> Bool {
+        var isDir: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir), isDir.boolValue else {
+            return false
+        }
+        if url.pathExtension.lowercased() == "app" { return false }
+        if let v = try? url.resourceValues(forKeys: [.isPackageKey]), v.isPackage == true {
+            return false
+        }
+        return true
+    }
+
     static func load(from url: URL) -> FileItem? {
         guard let v = try? url.resourceValues(forKeys: Set(resourceKeys)) else { return nil }
+        let ext = url.pathExtension.lowercased()
+        let isPkg = v.isPackage ?? (ext == "app")
         return FileItem(
             url:           url,
             name:          url.lastPathComponent,
             isDirectory:   v.isDirectory ?? false,
+            isPackage:     isPkg,
             isHidden:      v.isHidden ?? false,
             size:          Int64(v.fileSize ?? 0),
             dateModified:  v.contentModificationDate ?? .distantPast,
             dateCreated:   v.creationDate ?? .distantPast,
             kind:          v.localizedTypeDescription ?? (v.isDirectory == true ? "Folder" : "File"),
-            fileExtension: url.pathExtension.lowercased(),
+            fileExtension: ext,
             labelNumber:   v.labelNumber ?? 0,
             tagNames:      v.tagNames ?? []
         )
@@ -148,8 +169,8 @@ struct FileItem: Identifiable, Hashable {
 
     private static let iconCache: NSCache<NSString, NSImage> = {
         let c = NSCache<NSString, NSImage>()
-        c.countLimit = 300         // ~9 MB max at 32×32; NSCache evicts under memory pressure
-        c.totalCostLimit = 10 * 1024 * 1024  // 10 MB hard cap
+        c.countLimit = 500
+        c.totalCostLimit = 16 * 1024 * 1024
         return c
     }()
 
@@ -325,9 +346,9 @@ func sortedItems(_ items: [FileItem],
     items.sorted { a, b in
         switch folderOrder {
         case .foldersFirst:
-            if a.isDirectory != b.isDirectory { return a.isDirectory }
+            if a.isBrowsableFolder != b.isBrowsableFolder { return a.isBrowsableFolder }
         case .filesFirst:
-            if a.isDirectory != b.isDirectory { return !a.isDirectory }
+            if a.isBrowsableFolder != b.isBrowsableFolder { return !a.isBrowsableFolder }
         case .mixed:
             break
         }
@@ -382,7 +403,7 @@ func groupedItems(_ items: [FileItem], by grouping: GroupBy) -> [FileGroup] {
         var buckets: [String: [FileItem]] = [:]
         for item in items {
             let key: String
-            if item.isDirectory {
+            if item.isBrowsableFolder {
                 key = "Folders"
             } else if item.fileExtension.isEmpty {
                 key = "Other"
@@ -411,7 +432,14 @@ func groupedItems(_ items: [FileItem], by grouping: GroupBy) -> [FileGroup] {
 
 func loadItems(at url: URL, showHidden: Bool) -> [FileItem] {
     let opts: FileManager.DirectoryEnumerationOptions = showHidden ? [] : [.skipsHiddenFiles]
-    return (try? FileManager.default.contentsOfDirectory(
-        at: url, includingPropertiesForKeys: FileItem.resourceKeys, options: opts
-    ))?.compactMap { FileItem.load(from: $0) } ?? []
+    let keys = FileItem.resourceKeys
+    guard let urls = try? FileManager.default.contentsOfDirectory(
+        at: url, includingPropertiesForKeys: keys, options: opts
+    ) else { return [] }
+    var items: [FileItem] = []
+    items.reserveCapacity(urls.count)
+    for child in urls {
+        if let item = FileItem.load(from: child) { items.append(item) }
+    }
+    return items
 }

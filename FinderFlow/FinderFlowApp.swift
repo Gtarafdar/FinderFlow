@@ -70,9 +70,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let url = URL(fileURLWithPath: path)
 
         DispatchQueue.main.async {
-            if isDir.boolValue {
+            if isDir.boolValue && FileItem.isBrowsableFolder(url) {
                 AppDelegate.pendingNavigationURL = url
                 NotificationCenter.default.post(name: .navigateToPath, object: url)
+            } else if isDir.boolValue {
+                NSWorkspace.shared.open(url)
             } else if url.pathExtension.lowercased() == "md" {
                 // Markdown → rendered reader window (matches in-app double-click).
                 MarkdownWindowManager.shared.open(url)
