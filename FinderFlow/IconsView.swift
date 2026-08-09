@@ -5,7 +5,7 @@ struct IconsView: View {
     @Binding var selectedIDs: Set<String>
     let currentPath: URL
     let groupBy:     GroupBy
-    let onNavigate:  (URL) -> Void
+    let onNavigate:  (FileItem) -> Void
     let onBrowseInto:(URL) -> Void
     let onReload:    () -> Void
     @ObservedObject var fileOps:   FileOperationsService
@@ -29,7 +29,7 @@ struct IconsView: View {
                                 ForEach(group.items) { item in
                                     IconCell(item: item, iconSize: iconSize, isSelected: selectedIDs.contains(item.id))
                                         .fileDragOut(item: item, files: files, selectedIDs: selectedIDs)
-                                        .onTapGesture(count: 2) { onNavigate(item.url) }
+                                        .onTapGesture(count: 2) { onNavigate(item) }
                                         .onTapGesture         { selectedIDs = [item.id] }
                                         .contextMenu { iconContextMenu(item: item) }
                                 }
@@ -69,7 +69,7 @@ struct IconsView: View {
         let targets = sel.isEmpty ? [item] : sel
         let urls    = targets.map(\.url)
 
-        Button("Open") { onNavigate(item.url) }
+        Button("Open") { onNavigate(item) }
         if item.isBrowsableFolder {
             Button("Open in New Window") { NSWorkspace.shared.open(item.url) }
         } else if item.isPackage {

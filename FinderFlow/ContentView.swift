@@ -171,7 +171,14 @@ struct ContentView: View {
         }
         // Don't clear the icon cache on every navigation — NSCache evicts under
         // memory pressure automatically; keeping icons warm makes navigation fast.
-        .onChange(of: currentPath)   { _, _  in reload(); selectedIDs = []; activeTagFilter = nil }
+        .onChange(of: currentPath)   { _, _  in
+            // Instant feedback: clear stale listing so navigation doesn't look frozen
+            // while the background reload runs.
+            rawFiles = []
+            selectedIDs = []
+            activeTagFilter = nil
+            reload()
+        }
         .onChange(of: sortFieldRaw)     { _, _  in
             rawFiles = sortedItems(rawFiles, by: sortField, ascending: sortAscending, folderOrder: folderOrder)
             resortSearchFiles()
@@ -384,7 +391,7 @@ struct ContentView: View {
                 sortField:        sortFieldBinding,
                 sortAscending:    $sortAscending,
                 groupBy:          groupBy,
-                onNavigate:       navigate,
+                onNavigate:       navigateItem,
                 onBrowseInto:     { currentPath = $0 },
                 onReload:         reload,
                 fileOps:          fileOps,
@@ -396,7 +403,7 @@ struct ContentView: View {
                 selectedIDs: $selectedIDs,
                 currentPath: currentPath,
                 groupBy:     groupBy,
-                onNavigate:  navigate,
+                onNavigate:  navigateItem,
                 onBrowseInto: { currentPath = $0 },
                 onReload:    reload,
                 fileOps:     fileOps,
@@ -483,6 +490,33 @@ struct ContentView: View {
     }
 
     // MARK: - Helpers
+
+    /// Fast path when the row's `FileItem` is already loaded — no extra disk stat.
+    private func navigateItem(_ item: FileItem) {
+        if item.isBrowsableFolder {
+            currentPath = item.url
+            return
+        }
+        let ext = item.fileExtension
+        if ext == "md" {
+            MarkdownWindowManager.shared.open(item.url)
+            return
+        }
+        // Known text extensions skip the 8KB disk sniff.
+        if !ext.isEmpty && TextFileDetector.knownTextExtensions.contains(ext) {
+            EditorWindowManager.shared.open(item.url)
+            return
+        }
+        if TextFileDetector.knownTextFilenames.contains(item.name.lowercased()) {
+            EditorWindowManager.shared.open(item.url)
+            return
+        }
+        if TextFileDetector.isEditableText(item.url) {
+            EditorWindowManager.shared.open(item.url)
+        } else {
+            NSWorkspace.shared.open(item.url)
+        }
+    }
 
     private func navigate(_ url: URL) {
         if FileItem.isBrowsableFolder(url) {

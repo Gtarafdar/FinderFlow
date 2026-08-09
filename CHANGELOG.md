@@ -5,6 +5,19 @@ relative to the 1.0 release.
 
 ---
 
+## 1.5.2 — Faster folder & file open
+
+- **Snappier navigation** — clear the stale listing immediately on folder
+  change so double-click doesn't look frozen while the directory loads.
+- **Faster directory loads** — browse metadata skips expensive Kind/tag
+  lookups on every entry; Kind falls back to a cheap extension label.
+- **Faster open path** — List/Icons/Columns use the already-loaded
+  `FileItem` (no extra package stat); known text extensions skip the 8KB sniff.
+- **Faster date groups** — single-pass bucketing instead of six full filters.
+- **Faster Markdown read** — preview reuses the in-memory buffer (one disk read).
+
+---
+
 ## 1.5.1 — Install migration fix for newest-first defaults
 
 - **Broader one-time prefs migration** when upgrading from 1.2–1.5: Name A→Z

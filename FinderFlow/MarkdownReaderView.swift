@@ -283,7 +283,9 @@ struct MarkdownReaderView: View {
     private var contentArea: some View {
         switch mode {
         case .read:
-            MarkdownWebView(source: .file(current), refreshID: refreshID) { dest in
+            // Reuse in-memory buffer — avoid a second disk read for the preview.
+            MarkdownWebView(source: .string(editText, title: current.deletingPathExtension().lastPathComponent),
+                            refreshID: refreshID) { dest in
                 navStack.append(current)
                 current = dest
             }

@@ -66,7 +66,7 @@ struct ColumnsView: View {
             .contentShape(Rectangle())
             .fileDragOut(item: item, files: searchResults, selectedIDs: [item.id])
             .onTapGesture {
-                if FileItem.isBrowsableFolder(item.url) {
+                if item.isBrowsableFolder {
                     currentPath = item.url
                 } else {
                     onOpen(item.url)
@@ -141,13 +141,13 @@ struct ColumnsView: View {
             sortAscending:  sortAscending,
             folderOrder:    folderOrder,
             onSelect: { selected in
-                if FileItem.isBrowsableFolder(selected) {
-                    columns = Array(columns.prefix(idx + 1)) + [selected]
-                    currentPath = selected
+                if selected.isBrowsableFolder {
+                    columns = Array(columns.prefix(idx + 1)) + [selected.url]
+                    currentPath = selected.url
                     selectedFileURL = nil
                 } else {
                     columns = Array(columns.prefix(idx + 1))
-                    selectedFileURL = selected
+                    selectedFileURL = selected.url
                 }
             },
             onBrowseInto: { url in
@@ -173,7 +173,7 @@ struct ColumnsView: View {
     @ViewBuilder
     private func columnContextMenu(item: FileItem, directory: URL) -> some View {
         Button("Open") {
-            if FileItem.isBrowsableFolder(item.url) {
+            if item.isBrowsableFolder {
                 currentPath = item.url
             } else {
                 onOpen(item.url)
@@ -394,7 +394,7 @@ struct ColumnPane: View {
     let sortField:      SortField
     let sortAscending:  Bool
     let folderOrder:    FolderOrder
-    let onSelect:       (URL) -> Void
+    let onSelect:       (FileItem) -> Void
     let onBrowseInto:   (URL) -> Void
     let onOpen:         (URL) -> Void
     @ObservedObject var fileOps:   FileOperationsService
@@ -446,14 +446,14 @@ struct ColumnPane: View {
             .contentShape(Rectangle())
             .fileDragOut(item: item, files: items, selectedIDs: highlightedURL == item.url ? [item.id] : [])
             .simultaneousGesture(TapGesture(count: 2).onEnded {
-                if FileItem.isBrowsableFolder(item.url) {
-                    onSelect(item.url)
+                if item.isBrowsableFolder {
+                    onSelect(item)
                 } else {
                     onOpen(item.url)
                 }
             })
             .simultaneousGesture(TapGesture(count: 1).onEnded {
-                onSelect(item.url)
+                onSelect(item)
             })
             .contextMenu { columnContextMenu(item: item) }
     }
@@ -464,7 +464,7 @@ struct ColumnPane: View {
     private func columnContextMenu(item: FileItem) -> some View {
         Button("Open") {
             if item.isBrowsableFolder {
-                onSelect(item.url)
+                onSelect(item)
             } else {
                 onOpen(item.url)
             }

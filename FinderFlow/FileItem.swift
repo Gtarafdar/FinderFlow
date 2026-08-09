@@ -115,23 +115,31 @@ struct FileItem: Identifiable, Hashable {
     let labelNumber: Int
     let tagNames:    [String]   // macOS modern tags (multiple per file)
 
+    /// Keys needed to browse / sort / group quickly. Kind description and tags
+    /// are filled with cheap fallbacks so folder opens don't wait on UTType/tag I/O.
     static let resourceKeys: [URLResourceKey] = [
         .isDirectoryKey, .isPackageKey, .fileSizeKey, .contentModificationDateKey,
-        .creationDateKey, .localizedTypeDescriptionKey, .isHiddenKey,
-        .labelNumberKey, .tagNamesKey,
+        .creationDateKey, .isHiddenKey, .labelNumberKey,
+    ]
+
+    /// Extra keys for Get Info / tag UI enrichment (optional second pass).
+    static let enrichKeys: [URLResourceKey] = [
+        .localizedTypeDescriptionKey, .tagNamesKey,
     ]
 
     /// True when double-click should navigate into this item like a normal folder.
     /// Application bundles and other opaque packages launch instead (Finder behaviour).
     var isBrowsableFolder: Bool { isDirectory && !isPackage }
 
-    /// URL-level check used before a `FileItem` exists (navigate / open handlers).
+    /// URL-level check used before a `FileItem` exists (path bar / external opens).
+    /// Prefer `item.isBrowsableFolder` when a `FileItem` is already loaded.
     static func isBrowsableFolder(_ url: URL) -> Bool {
+        // Fast path: .app is never browsable as a folder.
+        if url.pathExtension.lowercased() == "app" { return false }
         var isDir: ObjCBool = false
         guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir), isDir.boolValue else {
             return false
         }
-        if url.pathExtension.lowercased() == "app" { return false }
         if let v = try? url.resourceValues(forKeys: [.isPackageKey]), v.isPackage == true {
             return false
         }
@@ -142,17 +150,23 @@ struct FileItem: Identifiable, Hashable {
         guard let v = try? url.resourceValues(forKeys: Set(resourceKeys)) else { return nil }
         let ext = url.pathExtension.lowercased()
         let isPkg = v.isPackage ?? (ext == "app")
+        let isDir = v.isDirectory ?? false
+        // Prefer localized kind when present; otherwise a cheap extension-based label
+        // so we don't require .localizedTypeDescriptionKey on every folder open.
+        let kind = v.localizedTypeDescription
+            ?? (isDir && !isPkg ? "Folder"
+                : (ext.isEmpty ? "File" : "\(ext.uppercased()) File"))
         return FileItem(
             id:            url.path,
             url:           url,
             name:          url.lastPathComponent,
-            isDirectory:   v.isDirectory ?? false,
+            isDirectory:   isDir,
             isPackage:     isPkg,
             isHidden:      v.isHidden ?? false,
             size:          Int64(v.fileSize ?? 0),
             dateModified:  v.contentModificationDate ?? .distantPast,
             dateCreated:   v.creationDate ?? .distantPast,
-            kind:          v.localizedTypeDescription ?? (v.isDirectory == true ? "Folder" : "File"),
+            kind:          kind,
             fileExtension: ext,
             labelNumber:   v.labelNumber ?? 0,
             tagNames:      v.tagNames ?? []
@@ -378,15 +392,25 @@ func groupedItems(_ items: [FileItem], by grouping: GroupBy) -> [FileGroup] {
         return [FileGroup(id: "all", title: "", items: items)]
 
     case .dateModified:
+        var buckets: [DateCategory: [FileItem]] = [:]
+        buckets.reserveCapacity(DateCategory.allCases.count)
+        for item in items {
+            buckets[item.dateCategory, default: []].append(item)
+        }
         return DateCategory.allCases.compactMap { cat in
-            let g = items.filter { $0.dateCategory == cat }
-            return g.isEmpty ? nil : FileGroup(id: "dm-\(cat.rawValue)", title: cat.rawValue, items: g)
+            guard let g = buckets[cat], !g.isEmpty else { return nil }
+            return FileGroup(id: "dm-\(cat.rawValue)", title: cat.rawValue, items: g)
         }
 
     case .dateCreated:
+        var buckets: [DateCategory: [FileItem]] = [:]
+        buckets.reserveCapacity(DateCategory.allCases.count)
+        for item in items {
+            buckets[item.dateCreatedCategory, default: []].append(item)
+        }
         return DateCategory.allCases.compactMap { cat in
-            let g = items.filter { $0.dateCreatedCategory == cat }
-            return g.isEmpty ? nil : FileGroup(id: "dc-\(cat.rawValue)", title: cat.rawValue, items: g)
+            guard let g = buckets[cat], !g.isEmpty else { return nil }
+            return FileGroup(id: "dc-\(cat.rawValue)", title: cat.rawValue, items: g)
         }
 
     case .kind:
