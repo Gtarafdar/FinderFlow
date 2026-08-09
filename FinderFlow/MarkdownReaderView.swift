@@ -32,6 +32,11 @@ struct MarkdownReaderView: View {
     @State private var isModified: Bool    = false
     @State private var saveFlash:  String? = nil
     @State private var refreshID:  UUID    = UUID()
+    @State private var previewText: String = ""
+    @StateObject private var editorCtrl = MarkdownEditorController()
+    @State private var showLinkSheet = false
+    @State private var linkURLDraft  = "https://"
+    @State private var previewTask: Task<Void, Never>?
 
     init(url: URL,
          onClose: @escaping () -> Void = {},
@@ -45,16 +50,49 @@ struct MarkdownReaderView: View {
     var body: some View {
         VStack(spacing: 0) {
             toolbar
-            Divider()
+            if mode == .edit {
+                formatToolbar
+                Divider()
+            } else {
+                Divider()
+            }
             contentArea
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear        { loadFile(); pushTitle() }
-        .onChange(of: current)    { _, _ in loadFile(); pushTitle() }
+        .onAppear        { loadFile(); pushTitle(); previewText = editText }
+        .onChange(of: current)    { _, _ in loadFile(); pushTitle(); previewText = editText }
         .onChange(of: isModified) { _, _ in pushTitle() }
+        .onChange(of: editText) { _, newValue in
+            previewTask?.cancel()
+            previewTask = Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 300_000_000)
+                guard !Task.isCancelled else { return }
+                previewText = newValue
+                refreshID = UUID()
+            }
+        }
         // Safety net: never lose edits if the window is closed another way.
         .onDisappear { if isModified { try? editText.write(to: current, atomically: true, encoding: .utf8) } }
+        .sheet(isPresented: $showLinkSheet) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Insert link").font(.headline)
+                TextField("https://…", text: $linkURLDraft)
+                    .textFieldStyle(.roundedBorder)
+                HStack {
+                    Spacer()
+                    Button("Cancel") { showLinkSheet = false }
+                    Button("Insert") {
+                        editorCtrl.run { MarkdownFormatActions.link($0, url: linkURLDraft) }
+                        showLinkSheet = false
+                        isModified = true
+                    }
+                    .keyboardShortcut(.defaultAction)
+                }
+            }
+            .padding(20)
+            .frame(width: 360)
+        }
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -161,6 +199,83 @@ struct MarkdownReaderView: View {
     }
 
     // ─────────────────────────────────────────────────────────────
+    // MARK: Format toolbar (edit mode)
+    // ─────────────────────────────────────────────────────────────
+
+    private var formatToolbar: some View {
+        HStack(spacing: 2) {
+            formatButton("arrow.uturn.backward", help: "Undo", enabled: editorCtrl.canUndo) {
+                editorCtrl.run { MarkdownFormatActions.undo($0) }
+            }
+            formatButton("arrow.uturn.forward", help: "Redo", enabled: editorCtrl.canRedo) {
+                editorCtrl.run { MarkdownFormatActions.redo($0) }
+            }
+            Divider().frame(height: 16).padding(.horizontal, 4)
+
+            formatButton("bold", help: "Bold") {
+                editorCtrl.run { MarkdownFormatActions.bold($0) }; isModified = true
+            }
+            formatButton("italic", help: "Italic") {
+                editorCtrl.run { MarkdownFormatActions.italic($0) }; isModified = true
+            }
+            formatButton("strikethrough", help: "Strikethrough") {
+                editorCtrl.run { MarkdownFormatActions.strikethrough($0) }; isModified = true
+            }
+            formatButton("chevron.left.forwardslash.chevron.right", help: "Inline code") {
+                editorCtrl.run { MarkdownFormatActions.inlineCode($0) }; isModified = true
+            }
+            Divider().frame(height: 16).padding(.horizontal, 4)
+
+            formatButton("textformat.size.larger", help: "Heading 1") {
+                editorCtrl.run { MarkdownFormatActions.heading($0, level: 1) }; isModified = true
+            }
+            formatButton("textformat.size", help: "Heading 2") {
+                editorCtrl.run { MarkdownFormatActions.heading($0, level: 2) }; isModified = true
+            }
+            formatButton("textformat.size.smaller", help: "Heading 3") {
+                editorCtrl.run { MarkdownFormatActions.heading($0, level: 3) }; isModified = true
+            }
+            Divider().frame(height: 16).padding(.horizontal, 4)
+
+            formatButton("list.bullet", help: "Bullet list") {
+                editorCtrl.run { MarkdownFormatActions.bulletList($0) }; isModified = true
+            }
+            formatButton("list.number", help: "Numbered list") {
+                editorCtrl.run { MarkdownFormatActions.numberedList($0) }; isModified = true
+            }
+            formatButton("text.quote", help: "Quote") {
+                editorCtrl.run { MarkdownFormatActions.quote($0) }; isModified = true
+            }
+            formatButton("curlybraces", help: "Code block") {
+                editorCtrl.run { MarkdownFormatActions.codeFence($0) }; isModified = true
+            }
+            formatButton("link", help: "Link") {
+                linkURLDraft = "https://"
+                showLinkSheet = true
+            }
+            formatButton("minus", help: "Horizontal rule") {
+                editorCtrl.run { MarkdownFormatActions.horizontalRule($0) }; isModified = true
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 5)
+        .background(Color(nsColor: .windowBackgroundColor))
+    }
+
+    private func formatButton(_ systemName: String, help: String, enabled: Bool = true,
+                              action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.system(size: 12, weight: .semibold))
+                .frame(width: 26, height: 22)
+        }
+        .buttonStyle(.borderless)
+        .disabled(!enabled)
+        .help(help)
+    }
+
+    // ─────────────────────────────────────────────────────────────
     // MARK: Content area
     // ─────────────────────────────────────────────────────────────
 
@@ -168,12 +283,23 @@ struct MarkdownReaderView: View {
     private var contentArea: some View {
         switch mode {
         case .read:
-            MarkdownWebView(url: current, refreshID: refreshID) { dest in
+            MarkdownWebView(source: .file(current), refreshID: refreshID) { dest in
                 navStack.append(current)
                 current = dest
             }
-        case .edit:
-            MarkdownEditorView(text: $editText, isModified: $isModified)
+            case .edit:
+            HSplitView {
+                MarkdownEditorView(text: $editText, isModified: $isModified, controller: editorCtrl)
+                    .frame(minWidth: 280)
+                MarkdownWebView(source: .string(previewText, title: current.deletingPathExtension().lastPathComponent),
+                                refreshID: refreshID) { dest in
+                    if isModified { commitSave() }
+                    navStack.append(current)
+                    current = dest
+                    mode = .read
+                }
+                .frame(minWidth: 240)
+            }
         }
     }
 
@@ -260,43 +386,66 @@ final class MarkdownWindowManager: NSObject, NSWindowDelegate {
 
 // MARK: - WKWebView representable
 
+enum MarkdownWebSource: Equatable {
+    case file(URL)
+    case string(String, title: String)
+}
+
 struct MarkdownWebView: NSViewRepresentable {
-    let url:        URL
+    let source:     MarkdownWebSource
     let refreshID:  UUID          // bump to force reload of the same URL after a save
     let onNavigate: (URL) -> Void
 
     func makeCoordinator() -> Coordinator { Coordinator(onNavigate: onNavigate) }
 
     func makeNSView(context: Context) -> WKWebView {
-        let wv = WKWebView(frame: .zero)
+        let config = WKWebViewConfiguration()
+        let prefs = WKWebpagePreferences()
+        prefs.allowsContentJavaScript = false
+        config.defaultWebpagePreferences = prefs
+        let wv = WKWebView(frame: .zero, configuration: config)
         wv.navigationDelegate = context.coordinator
-        context.coordinator.render(url: url, refreshID: refreshID, in: wv)
+        context.coordinator.render(source: source, refreshID: refreshID, in: wv)
         return wv
     }
 
     func updateNSView(_ wv: WKWebView, context: Context) {
         context.coordinator.onNavigate = onNavigate
-        context.coordinator.render(url: url, refreshID: refreshID, in: wv)
+        context.coordinator.render(source: source, refreshID: refreshID, in: wv)
     }
 
     // MARK: Coordinator
 
     final class Coordinator: NSObject, WKNavigationDelegate {
         var onNavigate: (URL) -> Void
-        private var loadedURL:       URL?
-        private var loadedRefreshID: UUID?
+        private var loadedKey: String?
 
         init(onNavigate: @escaping (URL) -> Void) { self.onNavigate = onNavigate }
 
-        func render(url: URL, refreshID: UUID, in wv: WKWebView) {
-            guard url != loadedURL || refreshID != loadedRefreshID else { return }
-            loadedURL       = url
-            loadedRefreshID = refreshID
-            let md   = (try? String(contentsOf: url, encoding: .utf8))
+        func render(source: MarkdownWebSource, refreshID: UUID, in wv: WKWebView) {
+            let key: String
+            let md: String
+            let title: String
+            let base: URL?
+            switch source {
+            case .file(let url):
+                key = "file:\(url.path):\(refreshID.uuidString)"
+                md = (try? String(contentsOf: url, encoding: .utf8))
                     ?? (try? String(contentsOf: url, encoding: .isoLatin1))
                     ?? "*Unable to read file.*"
-            let html = MarkdownToHTML.render(md, title: url.deletingPathExtension().lastPathComponent)
-            wv.loadHTMLString(html, baseURL: url.deletingLastPathComponent())
+                title = url.deletingPathExtension().lastPathComponent
+                base = url.deletingLastPathComponent()
+            case .string(let text, let t):
+                // Hash content so live preview updates when text changes
+                key = "str:\(t):\(text.hashValue)"
+                md = text
+                title = t
+                base = nil
+            }
+            guard key != loadedKey else { return }
+            loadedKey = key
+            let html = MarkdownToHTML.render(md, title: title)
+            wv.loadHTMLString(html, baseURL: base)
         }
 
         func webView(_ wv: WKWebView, decidePolicyFor nav: WKNavigationAction,
@@ -306,9 +455,11 @@ struct MarkdownWebView: NSViewRepresentable {
             decisionHandler(.cancel)
             if target.isFileURL && target.pathExtension.lowercased() == "md" {
                 onNavigate(target)
-            } else {
+            } else if let scheme = target.scheme?.lowercased(),
+                      ["http", "https", "mailto"].contains(scheme) {
                 NSWorkspace.shared.open(target)
             }
+            // Block javascript:, data:, file opens of non-md, etc.
         }
     }
 }
@@ -318,9 +469,10 @@ struct MarkdownWebView: NSViewRepresentable {
 struct MarkdownEditorView: NSViewRepresentable {
     @Binding var text:       String
     @Binding var isModified: Bool
+    var controller: MarkdownEditorController
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(text: $text, isModified: $isModified)
+        Coordinator(text: $text, isModified: $isModified, controller: controller)
     }
 
     func makeNSView(context: Context) -> NSScrollView {
@@ -360,11 +512,14 @@ struct MarkdownEditorView: NSViewRepresentable {
 
         tv.string = text
         context.coordinator.textView = tv
+        controller.attach(tv)
         return scrollView
     }
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let tv = scrollView.documentView as? NSTextView else { return }
+        context.coordinator.controller = controller
+        if controller.textView !== tv { controller.attach(tv) }
         // Only update the backing store when the text changed externally
         // (e.g. file reload after navigation) — avoids cursor/scroll reset while typing.
         guard tv.string != text else { return }
@@ -389,17 +544,20 @@ struct MarkdownEditorView: NSViewRepresentable {
     final class Coordinator: NSObject, NSTextViewDelegate {
         @Binding var text:       String
         @Binding var isModified: Bool
+        var controller: MarkdownEditorController
         weak var textView: NSTextView?
 
-        init(text: Binding<String>, isModified: Binding<Bool>) {
+        init(text: Binding<String>, isModified: Binding<Bool>, controller: MarkdownEditorController) {
             self._text       = text
             self._isModified = isModified
+            self.controller  = controller
         }
 
         func textDidChange(_ notification: Notification) {
             guard let tv = notification.object as? NSTextView else { return }
             text       = tv.string
             isModified = true
+            controller.refreshUndoState()
         }
     }
 }
@@ -573,15 +731,62 @@ enum MarkdownToHTML {
             (#"\*([^*\n]+)\*"#,             "<em>$1</em>"),
             (#"_([^_\n]+)_"#,              "<em>$1</em>"),
             (#"~~(.+?)~~"#,                 "<del>$1</del>"),
-            (#"!\[([^\]]*)\]\(([^)]+)\)"#, "<img src=\"$2\" alt=\"$1\">"),
-            (#"\[([^\]]+)\]\(([^)]+)\)"#,  "<a href=\"$2\">$1</a>"),
         ]
         for (pat, tmpl) in rules {
             guard let re = try? NSRegularExpression(pattern: pat) else { continue }
             s = re.stringByReplacingMatches(in: s, range: NSRange(s.startIndex..., in: s), withTemplate: tmpl)
         }
+        // Images / links — only allow safe URL schemes
+        if let imgRe = try? NSRegularExpression(pattern: #"!\[([^\]]*)\]\(([^)]+)\)"#) {
+            s = replaceLinks(in: s, regex: imgRe) { alt, url in
+                guard let safe = sanitizedURL(url) else { return escapeHTML(alt) }
+                return "<img src=\"\(escapeHTML(safe))\" alt=\"\(escapeHTML(alt))\">"
+            }
+        }
+        if let aRe = try? NSRegularExpression(pattern: #"\[([^\]]+)\]\(([^)]+)\)"#) {
+            s = replaceLinks(in: s, regex: aRe) { text, url in
+                guard let safe = sanitizedURL(url) else { return escapeHTML(text) }
+                return "<a href=\"\(escapeHTML(safe))\">\(text)</a>"
+            }
+        }
         for (n, code) in slots.enumerated() { s = s.replacingOccurrences(of: "\u{FFFE}\(n)\u{FFFF}", with: code) }
         return s
+    }
+
+    private static func replaceLinks(in s: String, regex: NSRegularExpression,
+                                     build: (String, String) -> String) -> String {
+        let ns = s as NSString
+        let matches = regex.matches(in: s, range: NSRange(location: 0, length: ns.length)).reversed()
+        var result = s
+        for m in matches {
+            guard m.numberOfRanges >= 3,
+                  let r0 = Range(m.range(at: 0), in: result),
+                  let r1 = Range(m.range(at: 1), in: result),
+                  let r2 = Range(m.range(at: 2), in: result) else { continue }
+            let text = String(result[r1])
+            let url  = String(result[r2])
+            result.replaceSubrange(r0, with: build(text, url))
+        }
+        return result
+    }
+
+    /// Allow http(s), mailto, relative paths, and file URLs — block javascript:/data:/etc.
+    private static func sanitizedURL(_ raw: String) -> String? {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        if trimmed.hasPrefix("#") { return trimmed }
+        if trimmed.hasPrefix("/") || trimmed.hasPrefix("./") || trimmed.hasPrefix("../") {
+            return trimmed
+        }
+        guard let url = URL(string: trimmed), let scheme = url.scheme?.lowercased() else {
+            // Bare relative path like "notes.md"
+            if !trimmed.contains(":") { return trimmed }
+            return nil
+        }
+        switch scheme {
+        case "http", "https", "mailto", "file": return trimmed
+        default: return nil
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────

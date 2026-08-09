@@ -2,7 +2,7 @@ import SwiftUI
 
 struct StatusBarView: View {
     let files: [FileItem]
-    let selectedIDs: Set<UUID>
+    let selectedIDs: Set<String>
     let currentPath: URL
 
     var body: some View {

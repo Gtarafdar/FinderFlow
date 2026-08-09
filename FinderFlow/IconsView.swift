@@ -2,7 +2,7 @@ import SwiftUI
 
 struct IconsView: View {
     let files:       [FileItem]
-    @Binding var selectedIDs: Set<UUID>
+    @Binding var selectedIDs: Set<String>
     let currentPath: URL
     let groupBy:     GroupBy
     let onNavigate:  (URL) -> Void

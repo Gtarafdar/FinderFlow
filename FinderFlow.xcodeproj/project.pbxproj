@@ -30,6 +30,10 @@
 		CCCCCCCCCCCCCCCCCCCC0006 /* CodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCCCCCCCCCCCCCCCCCCC0005 /* CodeEditorView.swift */; };
 		FFFFFFFFFFFFFFFF0002 /* UserPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFFFFFFFFFFFFFF0001 /* UserPreferences.swift */; };
 		FFFFFFFFFFFFFFFF0004 /* UpdateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFFFFFFFFFFFFFF0003 /* UpdateManager.swift */; };
+		FFFFFFFFFFFFFFFF0006 /* ErrorReportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFFFFFFFFFFFFFF0005 /* ErrorReportSheet.swift */; };
+		FFFFFFFFFFFFFFFF0008 /* MarkdownFormatActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFFFFFFFFFFFFFF0007 /* MarkdownFormatActions.swift */; };
+		FFFFFFFFFFFFFFFF000A /* MarkdownEditorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFFFFFFFFFFFFFF0009 /* MarkdownEditorController.swift */; };
+		FFFFFFFFFFFFFFFF000C /* FirstRunSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFFFFFFFFFFFFFF000B /* FirstRunSheet.swift */; };
 		DDDDDDDDDDDDDDDDDDDD0002 /* AceEditor in Resources */ = {isa = PBXBuildFile; fileRef = DDDDDDDDDDDDDDDDDDDD0001 /* AceEditor */; };
 /* End PBXBuildFile section */
 
@@ -86,6 +90,10 @@
 		CCCCCCCCCCCCCCCCCCCC0005 /* CodeEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEditorView.swift; sourceTree = "<group>"; };
 		FFFFFFFFFFFFFFFF0001 /* UserPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserPreferences.swift; sourceTree = "<group>"; };
 		FFFFFFFFFFFFFFFF0003 /* UpdateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateManager.swift; sourceTree = "<group>"; };
+		FFFFFFFFFFFFFFFF0005 /* ErrorReportSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorReportSheet.swift; sourceTree = "<group>"; };
+		FFFFFFFFFFFFFFFF0007 /* MarkdownFormatActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownFormatActions.swift; sourceTree = "<group>"; };
+		FFFFFFFFFFFFFFFF0009 /* MarkdownEditorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownEditorController.swift; sourceTree = "<group>"; };
+		FFFFFFFFFFFFFFFF000B /* FirstRunSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunSheet.swift; sourceTree = "<group>"; };
 		DDDDDDDDDDDDDDDDDDDD0001 /* AceEditor */ = {isa = PBXFileReference; lastKnownFileType = folder; path = AceEditor; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -152,6 +160,10 @@
 				CCCCCCCCCCCCCCCCCCCC0005 /* CodeEditorView.swift */,
 				FFFFFFFFFFFFFFFF0001 /* UserPreferences.swift */,
 				FFFFFFFFFFFFFFFF0003 /* UpdateManager.swift */,
+				FFFFFFFFFFFFFFFF0005 /* ErrorReportSheet.swift */,
+				FFFFFFFFFFFFFFFF0007 /* MarkdownFormatActions.swift */,
+				FFFFFFFFFFFFFFFF0009 /* MarkdownEditorController.swift */,
+				FFFFFFFFFFFFFFFF000B /* FirstRunSheet.swift */,
 				DDDDDDDDDDDDDDDDDDDD0001 /* AceEditor */,
 			);
 			path = FinderFlow;
@@ -294,6 +306,10 @@
 				CCCCCCCCCCCCCCCCCCCC0006 /* CodeEditorView.swift in Sources */,
 				FFFFFFFFFFFFFFFF0002 /* UserPreferences.swift in Sources */,
 				FFFFFFFFFFFFFFFF0004 /* UpdateManager.swift in Sources */,
+				FFFFFFFFFFFFFFFF0006 /* ErrorReportSheet.swift in Sources */,
+				FFFFFFFFFFFFFFFF0008 /* MarkdownFormatActions.swift in Sources */,
+				FFFFFFFFFFFFFFFF000A /* MarkdownEditorController.swift in Sources */,
+				FFFFFFFFFFFFFFFF000C /* FirstRunSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -416,7 +432,7 @@
 				CODE_SIGN_ENTITLEMENTS = FinderFlow/FinderFlow.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -425,7 +441,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.4;
+				MARKETING_VERSION = 1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finderflow.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -441,7 +457,7 @@
 				CODE_SIGN_ENTITLEMENTS = FinderFlow/FinderFlow.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -450,7 +466,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.4;
+				MARKETING_VERSION = 1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finderflow.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -463,7 +479,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = FinderFlowExtension/FinderFlowExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FinderFlowExtension/Info.plist;
@@ -472,7 +488,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.4;
+				MARKETING_VERSION = 1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finderflow.app.extension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -486,7 +502,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = FinderFlowExtension/FinderFlowExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FinderFlowExtension/Info.plist;
@@ -495,7 +511,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.4;
+				MARKETING_VERSION = 1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finderflow.app.extension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

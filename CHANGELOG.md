@@ -5,6 +5,27 @@ relative to the 1.0 release.
 
 ---
 
+## 1.5 — Reliability, Markdown toolkit, clearer install
+
+- **Markdown double-click fixed** — file identity is path-stable, so create →
+  edit → double-click opens the reader again (no right-click required). Columns
+  view opens `.md` / text the same way as List and Icons.
+- **Error sheet** — long errors scroll in a compact dialog with **Copy** and
+  **Contact Support** (opens GitHub Issues; diagnostics stay on your clipboard).
+- **Newest-first defaults** — list + date-modified groups sorted newest first
+  (folders on top). One-time migration for installs still on the old name A→Z
+  factory combo; customized prefs are untouched.
+- **Markdown writing toolkit** — Edit mode format bar with real Undo/Redo
+  (AppKit undo stack), bold/italic/strike/code/headings/lists/quote/fences/link/HR.
+  Split live preview while editing. Paste-friendly plain-text source editing.
+- **Safer preview** — JavaScript disabled in the Markdown WebView; `javascript:` /
+  unsafe link schemes blocked.
+- **Install clarity** — styled drag-to-Applications DMG, **Install & First Open**
+  instructions, **Fix Gatekeeper.command** helper, and a one-time first-run sheet
+  explaining the safe Open Anyway step for unsigned builds.
+
+---
+
 ## 1.4 — Finder-like defaults + in-app updates
 
 - **Finder-like defaults on first launch** — list view, name sort, **date-modified

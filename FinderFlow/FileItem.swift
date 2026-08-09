@@ -99,7 +99,8 @@ enum SizeBand: String, CaseIterable, Identifiable {
 // MARK: - FileItem
 
 struct FileItem: Identifiable, Hashable {
-    let id           = UUID()
+    /// Stable path-based id so selection / rename survive directory reloads.
+    let id:            String
     let url:           URL
     let name:          String
     let isDirectory:   Bool
@@ -142,6 +143,7 @@ struct FileItem: Identifiable, Hashable {
         let ext = url.pathExtension.lowercased()
         let isPkg = v.isPackage ?? (ext == "app")
         return FileItem(
+            id:            url.path,
             url:           url,
             name:          url.lastPathComponent,
             isDirectory:   v.isDirectory ?? false,

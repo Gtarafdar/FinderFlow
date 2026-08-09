@@ -8,7 +8,7 @@ private let kTableHeaderStripHeight: CGFloat = 30
 
 struct ListView: View {
     let files:         [FileItem]
-    @Binding var selectedIDs:      Set<UUID>
+    @Binding var selectedIDs:      Set<String>
     @Binding var pendingRenameURL: URL?
     let currentPath:   URL
     @Binding var sortField:     SortField
@@ -21,7 +21,7 @@ struct ListView: View {
     @ObservedObject var favorites: FavoritesService
 
     @State private var sortOrder:       [KeyPathComparator<FileItem>] = [.init(\.name, order: .forward)]
-    @State private var renamingID:      UUID?
+    @State private var renamingID:      String?
     @State private var renameText:      String = ""
     @State private var renameCancelled: Bool   = false
     @FocusState private var renameActive: Bool
@@ -116,13 +116,18 @@ struct ListView: View {
         }
         .onChange(of: sortField)     { _, _ in syncSortOrder() }
         .onChange(of: sortAscending) { _, _ in syncSortOrder() }
+        .onChange(of: files) { _, newFiles in
+            if let id = renamingID, !newFiles.contains(where: { $0.id == id }) {
+                renamingID = nil
+            }
+        }
         .onChange(of: renameActive)  { _, active in
             guard !active, let id = renamingID,
                   let item = files.first(where: { $0.id == id }) else { return }
             commitRename(for: item)
         }
         .onAppear { syncSortOrder() }
-        .contextMenu(forSelectionType: UUID.self) { ids in contextMenu(for: ids) }
+        .contextMenu(forSelectionType: String.self) { ids in contextMenu(for: ids) }
         primaryAction: { ids in
             guard renamingID == nil else { return }
             if let id = ids.first, let item = files.first(where: { $0.id == id }) {
@@ -187,7 +192,7 @@ struct ListView: View {
     // MARK: - Full macOS context menu
 
     @ViewBuilder
-    func contextMenu(for ids: Set<UUID>) -> some View {
+    func contextMenu(for ids: Set<String>) -> some View {
         let sel  = files.filter { ids.contains($0.id) }
         if let item = sel.first {
             let urls = sel.map(\.url)
@@ -268,7 +273,7 @@ struct ListView: View {
 
     // MARK: - Helpers
 
-    private func quickLook(ids: Set<UUID>) {
+    private func quickLook(ids: Set<String>) {
         let urls = files.filter { ids.contains($0.id) }.map(\.url)
         guard !urls.isEmpty else { return }
         QuickLookController.shared.show(urls)
@@ -283,7 +288,7 @@ struct ListView: View {
 
 struct GroupedListView: View {
     let files:       [FileItem]
-    @Binding var selectedIDs:      Set<UUID>
+    @Binding var selectedIDs:      Set<String>
     @Binding var pendingRenameURL: URL?
     let currentPath: URL
     let groupBy:     GroupBy
@@ -293,7 +298,7 @@ struct GroupedListView: View {
     @ObservedObject var fileOps:   FileOperationsService
     @ObservedObject var favorites: FavoritesService
 
-    @State private var renamingID:      UUID?
+    @State private var renamingID:      String?
     @State private var renameText:      String = ""
     @State private var renameCancelled: Bool   = false
     @FocusState private var renameActive: Bool
@@ -346,6 +351,11 @@ struct GroupedListView: View {
         .onChange(of: selectedIDs) { _, ids in
             if let id = ids.first {
                 withAnimation { proxy.scrollTo(id, anchor: .center) }
+            }
+        }
+        .onChange(of: files) { _, newFiles in
+            if let id = renamingID, !newFiles.contains(where: { $0.id == id }) {
+                renamingID = nil
             }
         }
         .onChange(of: renameActive) { _, active in

@@ -42,7 +42,7 @@ enum FileDragSupport {
     /// Resolve which URLs should ride along with a drag that starts on `item`.
     /// If the clicked item is part of the current selection, drag the whole
     /// selection; otherwise just that one item (Finder behaviour).
-    static func urlsForDrag(item: FileItem, files: [FileItem], selectedIDs: Set<UUID>) -> [URL] {
+    static func urlsForDrag(item: FileItem, files: [FileItem], selectedIDs: Set<String>) -> [URL] {
         if selectedIDs.contains(item.id), selectedIDs.count > 1 {
             return files.filter { selectedIDs.contains($0.id) }.map(\.url)
         }
@@ -64,7 +64,7 @@ enum FileDragSupport {
 
 extension View {
     /// Attach Finder-style file drag-out to any row / icon / cell.
-    func fileDragOut(item: FileItem, files: [FileItem], selectedIDs: Set<UUID>) -> some View {
+    func fileDragOut(item: FileItem, files: [FileItem], selectedIDs: Set<String>) -> some View {
         onDrag {
             let urls = FileDragSupport.urlsForDrag(item: item, files: files, selectedIDs: selectedIDs)
             return FileDragSupport.provider(for: urls)

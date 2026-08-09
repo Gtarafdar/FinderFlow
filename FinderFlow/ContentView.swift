@@ -21,13 +21,15 @@ struct ContentView: View {
     @AppStorage(UserPreferences.showHiddenKey)     private var showHidden        = false
     @AppStorage(UserPreferences.showPreviewKey)    private var showPreview       = false
     @AppStorage(UserPreferences.showColumnTreeKey) private var showColumnTree    = false
+    @AppStorage(UserPreferences.didShowFirstRunKey) private var didShowFirstRun  = false
+    @State private var showFirstRun = false
 
     private var viewMode: ViewMode       { ViewMode.fromStorage(viewModeRaw) }
     private var sortField: SortField     { SortField.fromStorage(sortFieldRaw) }
     private var groupBy: GroupBy         { GroupBy.fromStorage(groupByRaw) }
     private var folderOrder: FolderOrder { FolderOrder.fromStorage(folderOrderRaw) }
 
-    @State private var selectedIDs:      Set<UUID> = []
+    @State private var selectedIDs:      Set<String> = []
     @State private var rawFiles:            [FileItem] = []
     @State private var searchDisplayFiles:  [FileItem] = []   // pre-computed search results (avoid reloading on every render)
     @State private var pendingSelectURL: URL?
@@ -152,8 +154,14 @@ struct ContentView: View {
         splitView
         // ── Lifecycle ───────────────────────────────────────────────────
         .onAppear {
+            UserPreferences.migrateBrowseDefaultsIfNeeded()
             reload()
             updateManager.checkIfNeeded()
+            if !didShowFirstRun {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                    showFirstRun = true
+                }
+            }
             // Cold launch via "Open in FinderFlow" / default folder handler:
             // the open request may arrive before this view is listening.
             if let pending = AppDelegate.pendingNavigationURL {
@@ -258,12 +266,25 @@ struct ContentView: View {
                 DispatchQueue.main.async { tagDisplayFiles = files }
             }
         }
-        .alert("Error", isPresented: .init(
+        .sheet(isPresented: Binding(
             get: { errorMsg != nil },
-            set: { if !$0 { errorMsg = nil; folderService.errorMessage = nil; fileOps.errorMessage = nil } }
+            set: { if !$0 {
+                errorMsg = nil
+                folderService.errorMessage = nil
+                fileOps.errorMessage = nil
+            }}
         )) {
-            Button("OK", role: .cancel) { errorMsg = nil }
-        } message: { Text(errorMsg ?? "") }
+            ErrorReportSheet(message: errorMsg ?? "") {
+                errorMsg = nil
+                folderService.errorMessage = nil
+                fileOps.errorMessage = nil
+            }
+        }
+        .sheet(isPresented: $showFirstRun, onDismiss: {
+            didShowFirstRun = true
+        }) {
+            FirstRunSheet(isPresented: $showFirstRun)
+        }
     }
 
     // MARK: - Keyboard shortcuts (hidden buttons)
@@ -393,7 +414,8 @@ struct ContentView: View {
                 fileOps:        fileOps,
                 favorites:      favorites,
                 searchResults:  displayFiles,
-                isSearchActive: !searchEngine.query.isEmpty || activeTagFilter != nil
+                isSearchActive: !searchEngine.query.isEmpty || activeTagFilter != nil,
+                onOpen:         navigate
             )
         }
     }

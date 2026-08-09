@@ -30,6 +30,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
+        UserPreferences.migrateBrowseDefaultsIfNeeded()
         // Sync stored toggle with actual SMAppService registration state
         if #available(macOS 13.0, *) {
             let enabled = SMAppService.mainApp.status == .enabled

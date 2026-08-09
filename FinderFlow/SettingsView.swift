@@ -113,7 +113,7 @@ struct SettingsView: View {
             }
 
             Section("Browse defaults") {
-                Text("New installs start with Finder-like settings: list view, name sort, date-modified groups, folders on top. Reset restores those defaults.")
+                Text("New installs start with Finder-like settings: list view, date-modified groups sorted newest first, folders on top. Reset restores those defaults.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

@@ -20,6 +20,8 @@ struct ColumnsView: View {
     // Search support — when isSearchActive the column browser is replaced by a flat results list
     let searchResults:  [FileItem]
     let isSearchActive: Bool
+    /// Opens files the same way List/Icons do (Markdown reader, Ace, workspace).
+    let onOpen: (URL) -> Void
 
     @State private var columns:         [URL]          = []
     @State private var colWidths:       [Int: CGFloat] = [:]
@@ -67,7 +69,7 @@ struct ColumnsView: View {
                 if FileItem.isBrowsableFolder(item.url) {
                     currentPath = item.url
                 } else {
-                    NSWorkspace.shared.open(item.url)
+                    onOpen(item.url)
                 }
             }
             .contextMenu { columnContextMenu(item: item, directory: item.url.deletingLastPathComponent()) }
@@ -153,6 +155,7 @@ struct ColumnsView: View {
                 currentPath = url
                 selectedFileURL = nil
             },
+            onOpen: onOpen,
             fileOps:   fileOps,
             favorites: favorites
         )
@@ -173,7 +176,7 @@ struct ColumnsView: View {
             if FileItem.isBrowsableFolder(item.url) {
                 currentPath = item.url
             } else {
-                NSWorkspace.shared.open(item.url)
+                onOpen(item.url)
             }
         }
         if item.isBrowsableFolder {
@@ -393,6 +396,7 @@ struct ColumnPane: View {
     let folderOrder:    FolderOrder
     let onSelect:       (URL) -> Void
     let onBrowseInto:   (URL) -> Void
+    let onOpen:         (URL) -> Void
     @ObservedObject var fileOps:   FileOperationsService
     @ObservedObject var favorites: FavoritesService
 
@@ -445,7 +449,7 @@ struct ColumnPane: View {
                 if FileItem.isBrowsableFolder(item.url) {
                     onSelect(item.url)
                 } else {
-                    NSWorkspace.shared.open(item.url)
+                    onOpen(item.url)
                 }
             })
             .simultaneousGesture(TapGesture(count: 1).onEnded {
@@ -458,7 +462,13 @@ struct ColumnPane: View {
 
     @ViewBuilder
     private func columnContextMenu(item: FileItem) -> some View {
-        Button("Open") { onSelect(item.url) }
+        Button("Open") {
+            if item.isBrowsableFolder {
+                onSelect(item.url)
+            } else {
+                onOpen(item.url)
+            }
+        }
         if item.isBrowsableFolder {
             Button("Open in New Window") { NSWorkspace.shared.open(item.url) }
         } else if item.isPackage {

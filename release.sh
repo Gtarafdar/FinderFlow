@@ -9,7 +9,7 @@
 #
 # NOTE: The app is ad-hoc signed and NOT notarized (no paid Apple Developer
 # account). Downloaders must do a one-time Gatekeeper bypass — the steps are
-# baked into the DMG as "READ ME FIRST.txt".
+# in "Install & First Open.txt" and "Fix Gatekeeper.command" inside the DMG.
 
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -66,62 +66,110 @@ echo "==> Staging DMG contents"
 mkdir -p "$STAGE"
 cp -R "$APP" "$STAGE/"
 ln -s /Applications "$STAGE/Applications"
+cp "dmg/Fix Gatekeeper.command" "$STAGE/"
+chmod +x "$STAGE/Fix Gatekeeper.command"
+mkdir -p "$STAGE/.background"
+cp "dmg/background.png" "$STAGE/.background/background.png"
 
-cat > "$STAGE/READ ME FIRST.txt" <<'EOF'
-FinderFlow — Installation
-=========================
+cat > "$STAGE/Install & First Open.txt" <<'EOF'
+FinderFlow — Install & First Open
+=================================
 
-1. Drag FinderFlow.app onto the Applications folder (in this window).
+1. Drag FinderFlow onto the Applications folder in this window.
 
-2. FIRST LAUNCH (required once):
-   Because FinderFlow is a free, open-source app that is not signed with a
-   paid Apple Developer certificate, macOS Gatekeeper blocks it the first time.
-   This is expected and only needs to be done once.
+2. FIRST OPEN (safe, one-time):
+   FinderFlow is free & open-source and is not signed with a paid Apple
+   Developer certificate. macOS Gatekeeper will block it once — that is
+   expected and safe.
 
-   EASIEST WAY:
-     • Try to open FinderFlow once (it will be blocked).
-     • Go to  System Settings → Privacy & Security
-     • Scroll down — you'll see "FinderFlow was blocked".
-     • Click  "Open Anyway",  then open FinderFlow again and confirm.
+   Sequoia / recent macOS:
+     • Open FinderFlow once (it may be blocked or only offer Move to Trash).
+     • Open System Settings → Privacy & Security.
+     • Scroll to the message about FinderFlow and click Open Anyway.
+     • Open FinderFlow again and confirm.
 
-   OR, the one-line Terminal way:
+   Quick alternative — double-click "Fix Gatekeeper.command" in this window
+   (after the app is in Applications). It only clears quarantine on
+   /Applications/FinderFlow.app and then opens the app. No network, no password.
+
+   Or in Terminal:
      xattr -dr com.apple.quarantine /Applications/FinderFlow.app
-   then open FinderFlow normally.
 
-3. PERMISSION PROMPTS (normal — just click Allow):
-   The first time you use FinderFlow, macOS may ask for a few permissions.
-   These are standard for any file manager and are NOT extra installs:
-     • "Access files in your Desktop/Documents/Downloads folder"  -> Allow
-     • "FinderFlow wants to control Finder"   (used by Get Info)  -> OK
-     • "FinderFlow wants to control Terminal" (Open in Terminal)  -> OK
-   If you deny a folder prompt by mistake, re-enable it in:
-     System Settings -> Privacy & Security -> Files and Folders.
+3. Folder permission prompts (normal — click Allow):
+   Desktop / Documents / Downloads access, plus occasional Finder/Terminal
+   control prompts for Get Info / Open in Terminal.
 
-4. (Optional) Enable the Finder integration ("Open in FinderFlow", etc.):
-     System Settings → General → Login Items & Extensions
-       → Extensions → Added Extensions (or Finder)  → enable FinderFlow.
+4. Optional Finder right-click menu:
+   System Settings → General → Login Items & Extensions → Extensions → FinderFlow.
 
-Nothing else to install — FinderFlow is self-contained (the editor and all
-tools are bundled; archive zip/unzip use macOS's built-in tools).
+Requirements: macOS 14 Sonoma or newer · Apple Silicon & Intel.
 
-Requirements: macOS 14 (Sonoma) or newer. Apple Silicon AND Intel supported.
-
-Enjoy! — https://github.com/  (your repo here)
+https://github.com/Gtarafdar/FinderFlow
 EOF
 
-echo "==> Creating compressed DMG"
+echo "==> Creating styled DMG (drag to Applications)"
+TMP_DMG="$OUT/${APP_NAME}-tmp.dmg"
+rm -f "$TMP_DMG" "$DMG"
+# Writable image so we can set Finder window layout
 hdiutil create \
     -volname "$APP_NAME $VERSION" \
     -srcfolder "$STAGE" \
     -fs HFS+ \
-    -format UDZO \
+    -format UDRW \
     -ov \
-    "$DMG" >/dev/null
+    "$TMP_DMG" >/dev/null
+
+MOUNT_DIR=$(hdiutil attach "$TMP_DMG" -readwrite -noverify -noautoopen 2>/dev/null \
+    | awk -F'\t' '/\/Volumes\// {print $NF; exit}')
+MOUNT_DIR=$(echo "$MOUNT_DIR" | sed 's/[[:space:]]*$//')
+if [ -z "${MOUNT_DIR:-}" ] || [ ! -d "$MOUNT_DIR" ]; then
+    echo "ERROR: could not mount temporary DMG" >&2
+    exit 1
+fi
+echo "    Mounted: $MOUNT_DIR"
+
+VOL_NAME=$(basename "$MOUNT_DIR")
+
+# Apply Finder window layout (icon positions + background)
+osascript <<APPLESCRIPT
+tell application "Finder"
+  tell disk "$VOL_NAME"
+    open
+    set current view of container window to icon view
+    set toolbar visible of container window to false
+    set statusbar visible of container window to false
+    set the bounds of container window to {200, 120, 920, 620}
+    set theViewOptions to the icon view options of container window
+    set arrangement of theViewOptions to not arranged
+    set icon size of theViewOptions to 128
+    try
+      set background picture of theViewOptions to file ".background:background.png"
+    end try
+    set position of item "$APP_NAME.app" of container window to {160, 250}
+    set position of item "Applications" of container window to {560, 250}
+    try
+      set position of item "Fix Gatekeeper.command" of container window to {360, 420}
+    end try
+    try
+      set position of item "Install & First Open.txt" of container window to {160, 420}
+    end try
+    update without registering applications
+    delay 1
+    close
+  end tell
+end tell
+APPLESCRIPT
+
+sync
+hdiutil detach "$MOUNT_DIR" -quiet || hdiutil detach "$MOUNT_DIR" -force -quiet
+hdiutil convert "$TMP_DMG" -format UDZO -imagekey zlib-level=9 -o "$DMG" >/dev/null
+rm -f "$TMP_DMG"
 
 echo "==> Done"
 SHA256=$(shasum -a 256 "$DMG" | cut -d' ' -f1)
 CHECKSUM="$DMG.sha256"
-echo "$SHA256" > "$CHECKSUM"
+# Standard `shasum -c` format: "<hash>  <basename>"
+echo "$SHA256  $(basename "$DMG")" > "$CHECKSUM"
 echo "    DMG:      $DMG"
 echo "    Checksum: $CHECKSUM"
 echo "    Size:     $(du -h "$DMG" | cut -f1)"

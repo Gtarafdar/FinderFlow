@@ -210,13 +210,16 @@ eating your RAM:
 
 ## Install
 
-1. Download the latest **`FinderFlow-1.4.dmg`** from
+1. Download the latest **`FinderFlow-1.5.dmg`** from
    [**Releases**](../../releases/latest) and open it.
 2. Drag **FinderFlow** into **Applications**.
 3. **First launch (one-time Gatekeeper step).** FinderFlow is free and isn't
-   signed with a paid Apple Developer certificate, so macOS asks once:
-   - Try to open it (it gets blocked), then go to **System Settings → Privacy &
+   signed with a paid Apple Developer certificate, so macOS asks once — this is
+   expected and safe:
+   - Try to open it (it may be blocked), then go to **System Settings → Privacy &
      Security**, scroll to *"FinderFlow was blocked"* and click **Open Anyway**.
+   - **Or** double-click **Fix Gatekeeper.command** in the DMG (after the app is
+     in Applications).
    - **Or** run once in Terminal:
      ```sh
      xattr -dr com.apple.quarantine /Applications/FinderFlow.app
@@ -310,9 +313,16 @@ In-app updates are optional and can be turned off in **Settings → Updates**.
 
 **Integrity check**
 
-- Every release ships a companion `FinderFlow-x.y.dmg.sha256` file.
+- Every release ships a companion `FinderFlow-x.y.dmg.sha256` file (standard
+  `shasum` format).
 - Before installing, the app **verifies the DMG’s SHA-256 hash** against that file.
 - If the checksum is missing or doesn’t match, the update is **blocked**.
+
+**Install helper**
+
+- The DMG’s `Fix Gatekeeper.command` only runs
+  `xattr -dr com.apple.quarantine /Applications/FinderFlow.app` and opens the app.
+  It does not use the network or request admin rights.
 
 **What this means for you**
 
