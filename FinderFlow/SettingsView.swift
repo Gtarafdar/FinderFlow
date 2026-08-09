@@ -118,6 +118,7 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 Button("Reset to Finder defaults") {
+                    UserPreferences.applyFactoryBrowseDefaults()
                     viewModeRaw    = UserPreferences.defaultViewMode.rawValue
                     sortFieldRaw   = UserPreferences.defaultSortField.rawValue
                     sortAscending  = UserPreferences.defaultSortAscending

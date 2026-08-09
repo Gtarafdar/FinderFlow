@@ -5,6 +5,16 @@ relative to the 1.0 release.
 
 ---
 
+## 1.5.1 — Install migration fix for newest-first defaults
+
+- **Broader one-time prefs migration** when upgrading from 1.2–1.5: Name A→Z
+  (and missing / None / date-modified grouping) becomes **Date Modified,
+  newest first, with date groups** — so Applications upgrades no longer keep
+  the old flat Name list.
+- Settings **Reset to Finder defaults** uses the same factory helper.
+
+---
+
 ## 1.5 — Reliability, Markdown toolkit, clearer install
 
 - **Markdown double-click fixed** — file identity is path-stable, so create →

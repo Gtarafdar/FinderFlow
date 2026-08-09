@@ -11,7 +11,8 @@ enum UserPreferences {
     static let showHiddenKey     = "ffShowHidden"
     static let showPreviewKey    = "ffShowPreview"
     static let showColumnTreeKey = "ffShowColumnTree"
-    static let defaultsMigratedKey = "ffBrowseDefaultsMigrated15"
+    /// Bumped key so 1.5.1 re-runs migration for users who got a narrow 1.5 pass.
+    static let defaultsMigratedKey = "ffBrowseDefaultsMigrated151"
     static let didShowFirstRunKey  = "ffDidShowFirstRun"
 
     // Finder-like factory defaults: list + date groups + newest first + folders on top
@@ -21,34 +22,53 @@ enum UserPreferences {
     static let defaultGroupBy:        GroupBy      = .dateModified
     static let defaultFolderOrder:    FolderOrder  = .foldersFirst
 
-    /// One-time: users still on the 1.4 factory combo (name A→Z + date groups)
-    /// get newest-first date sort. Customized prefs are left alone.
+    /// One-time: upgrades from pre-1.5 (or old factory Name A→Z / no grouping)
+    /// get newest-first date sort + date-modified groups. Deliberate custom prefs
+    /// (Size, Kind, descending Name, etc.) are left alone.
     static func migrateBrowseDefaultsIfNeeded() {
         let defaults = UserDefaults.standard
         guard !defaults.bool(forKey: defaultsMigratedKey) else { return }
         defaults.set(true, forKey: defaultsMigratedKey)
 
-        let sort   = defaults.string(forKey: sortFieldKey) ?? SortField.name.rawValue
+        let sortMissing = defaults.object(forKey: sortFieldKey) == nil
+        let groupMissing = defaults.object(forKey: groupByKey) == nil
+        let sort = defaults.string(forKey: sortFieldKey) ?? SortField.name.rawValue
         let ascObj = defaults.object(forKey: sortAscendingKey)
         let ascending = (ascObj as? Bool) ?? true
-        let group  = defaults.string(forKey: groupByKey) ?? GroupBy.dateModified.rawValue
+        let group = defaults.string(forKey: groupByKey) ?? GroupBy.none.rawValue
 
-        let looksLikeOldFactory =
-            sort == SortField.name.rawValue
-            && ascending == true
-            && group == GroupBy.dateModified.rawValue
+        let nameAscending = (sort == SortField.name.rawValue && ascending == true)
+        let groupLooksDefault =
+            groupMissing
+            || group == GroupBy.none.rawValue
+            || group == GroupBy.dateModified.rawValue
 
-        if looksLikeOldFactory || defaults.object(forKey: sortFieldKey) == nil {
-            defaults.set(defaultSortField.rawValue, forKey: sortFieldKey)
-            defaults.set(defaultSortAscending, forKey: sortAscendingKey)
-            defaults.set(defaultGroupBy.rawValue, forKey: groupByKey)
-            if defaults.object(forKey: viewModeKey) == nil {
-                defaults.set(defaultViewMode.rawValue, forKey: viewModeKey)
-            }
-            if defaults.object(forKey: folderOrderKey) == nil {
-                defaults.set(defaultFolderOrder.rawValue, forKey: folderOrderKey)
-            }
+        // Old factory / missing prefs / Name↑ with no intentional exotic group
+        let shouldApply =
+            sortMissing
+            || (nameAscending && groupLooksDefault)
+
+        guard shouldApply else { return }
+
+        defaults.set(defaultSortField.rawValue, forKey: sortFieldKey)
+        defaults.set(defaultSortAscending, forKey: sortAscendingKey)
+        defaults.set(defaultGroupBy.rawValue, forKey: groupByKey)
+        if defaults.object(forKey: viewModeKey) == nil {
+            defaults.set(defaultViewMode.rawValue, forKey: viewModeKey)
         }
+        if defaults.object(forKey: folderOrderKey) == nil {
+            defaults.set(defaultFolderOrder.rawValue, forKey: folderOrderKey)
+        }
+    }
+
+    /// Apply factory browse defaults (Settings reset + install repair).
+    static func applyFactoryBrowseDefaults() {
+        let defaults = UserDefaults.standard
+        defaults.set(defaultViewMode.rawValue, forKey: viewModeKey)
+        defaults.set(defaultSortField.rawValue, forKey: sortFieldKey)
+        defaults.set(defaultSortAscending, forKey: sortAscendingKey)
+        defaults.set(defaultGroupBy.rawValue, forKey: groupByKey)
+        defaults.set(defaultFolderOrder.rawValue, forKey: folderOrderKey)
     }
 }
 
