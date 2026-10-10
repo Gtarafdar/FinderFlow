@@ -31,6 +31,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
         UserPreferences.migrateBrowseDefaultsIfNeeded()
+        MainActor.assumeIsolated {
+            _ = UpdateManager.shared
+        }
         // Sync stored toggle with actual SMAppService registration state
         if #available(macOS 13.0, *) {
             let enabled = SMAppService.mainApp.status == .enabled
@@ -52,43 +55,59 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func handleOpen(_ url: URL) {
-        let targetPath: String?
+        let source: ExternalOpenSource
+        let rawPath: String?
         if url.isFileURL {
-            targetPath = url.path
+            source = .fileURL
+            rawPath = url.path
         } else if url.scheme == "finderflow" {
+            source = .finderFlowLink
             let comps = URLComponents(url: url, resolvingAgainstBaseURL: false)
-            targetPath = comps?.queryItems?
+            rawPath = comps?.queryItems?
                 .first(where: { $0.name == "path" })?.value
         } else {
-            targetPath = nil
+            return
         }
 
-        guard let path = targetPath, !path.isEmpty else { return }
-
+        guard let rawPath, !rawPath.isEmpty else { return }
+        let fileURL = URL(fileURLWithPath: rawPath)
+        // Resolve links before deciding, so a link to an app bundle is not treated as a folder.
+        let resolved = fileURL.resolvingSymlinksInPath()
         var isDir: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir) else { return }
+        guard FileManager.default.fileExists(atPath: resolved.path, isDirectory: &isDir) else { return }
 
-        let url = URL(fileURLWithPath: path)
+        let facts = ExternalOpenFacts(
+            isDirectory: isDir.boolValue,
+            isBrowsableFolder: FileItem.isBrowsableFolder(resolved),
+            isMarkdown: resolved.pathExtension.lowercased() == "md",
+            isEditableText: TextFileDetector.isEditableText(resolved)
+        )
+        let decision = externalOpenDecision(source: source, path: resolved.path, facts: facts)
 
         DispatchQueue.main.async {
-            if isDir.boolValue && FileItem.isBrowsableFolder(url) {
-                AppDelegate.pendingNavigationURL = url
-                NotificationCenter.default.post(name: .navigateToPath, object: url)
-            } else if isDir.boolValue {
-                NSWorkspace.shared.open(url)
-            } else if url.pathExtension.lowercased() == "md" {
-                // Markdown → rendered reader window (matches in-app double-click).
-                MarkdownWindowManager.shared.open(url)
-            } else if TextFileDetector.isEditableText(url) {
-                // A text/code file opened with FinderFlow → open it in the editor window.
-                EditorWindowManager.shared.open(url)
-            } else {
-                // Other files: reveal the enclosing folder.
-                let parent = url.deletingLastPathComponent()
+            switch decision {
+            case .navigate(let path):
+                let folder = URL(fileURLWithPath: path)
+                AppDelegate.pendingNavigationURL = folder
+                NotificationCenter.default.post(name: .navigateToPath, object: folder)
+                NSApp.activate(ignoringOtherApps: true)
+            case .launchPackage(let path):
+                NSWorkspace.shared.open(URL(fileURLWithPath: path))
+                NSApp.activate(ignoringOtherApps: true)
+            case .openMarkdown(let path):
+                MarkdownWindowManager.shared.open(URL(fileURLWithPath: path))
+                NSApp.activate(ignoringOtherApps: true)
+            case .openText(let path):
+                EditorWindowManager.shared.open(URL(fileURLWithPath: path))
+                NSApp.activate(ignoringOtherApps: true)
+            case .revealParent(let path):
+                let parent = URL(fileURLWithPath: path).deletingLastPathComponent()
                 AppDelegate.pendingNavigationURL = parent
                 NotificationCenter.default.post(name: .navigateToPath, object: parent)
+                NSApp.activate(ignoringOtherApps: true)
+            case .ignore:
+                break
             }
-            NSApp.activate(ignoringOtherApps: true)
         }
     }
 }
@@ -111,9 +130,7 @@ struct FinderFlowCommands: Commands {
             Divider()
 
             Button("Check for Updates…") {
-                Task { @MainActor in
-                    await UpdateManager.shared.checkForUpdates(force: true)
-                }
+                UpdateManager.shared.checkForUpdates()
             }
 
             Divider()

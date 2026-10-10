@@ -307,37 +307,32 @@ In-app updates are optional and can be turned off in **Settings → Updates**.
 
 **Where updates come from**
 
-- Only from official [**GitHub Releases**](https://github.com/Gtarafdar/FinderFlow/releases)
-  on `Gtarafdar/FinderFlow` — hardcoded in the app, not user-configurable.
-- Downloads use **HTTPS** (GitHub’s TLS).
+- Sparkle reads a stable appcast at
+  [gtarafdar.github.io/FinderFlow/appcast.xml](https://gtarafdar.github.io/FinderFlow/appcast.xml).
+- Each update’s download URL points at a [GitHub Release](https://github.com/Gtarafdar/FinderFlow/releases).
 
-**Integrity check**
+**What is verified**
 
-- Every release ships a companion `FinderFlow-x.y.dmg.sha256` file (standard
-  `shasum` format).
-- Before installing, the app **verifies the DMG’s SHA-256 hash** against that file.
-- If the checksum is missing or doesn’t match, the update is **blocked**.
+- Every update is signed with an EdDSA key that stays on the maintainer’s Mac.
+  Only the public key is in the app. Sparkle refuses a download whose signature
+  does not match, including one published from a compromised GitHub account.
+- The app does not strip the quarantine flag while installing an update.
 
-**Install helper**
+**If you are on 1.5.2 or earlier**
+
+- Download 1.5.3 once from GitHub Releases and replace the app yourself.
+  Update Now in those builds does not install a signed update.
+
+**First launch**
 
 - The DMG’s `Fix Gatekeeper.command` only runs
   `xattr -dr com.apple.quarantine /Applications/FinderFlow.app` and opens the app.
-  It does not use the network or request admin rights.
+  It does not use the network or request admin rights. That is a one-time step
+  because the app is ad-hoc signed, not an updater.
 
-**What this means for you**
-
-- Same trust model as downloading the DMG manually from GitHub — you trust the
-  maintainer’s releases.
-- A public repo does **not** weaken security; the updater uses read-only APIs and
-  ships no secrets.
-- Auto-update makes a compromised release reach users faster — protect your
-  GitHub account with **2FA** and only publish releases you built yourself.
-
-**What we don’t verify (yet)**
+**What we don’t verify yet**
 
 - Apple Developer ID signatures or notarization (requires a paid Apple account).
-- For maximum assurance, compare the published SHA-256 on the release page with
-  a hash you compute locally: `shasum -a 256 FinderFlow-x.y.dmg`.
 
 ## License
 

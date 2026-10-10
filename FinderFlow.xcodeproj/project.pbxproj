@@ -35,6 +35,10 @@
 		FFFFFFFFFFFFFFFF000A /* MarkdownEditorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFFFFFFFFFFFFFF0009 /* MarkdownEditorController.swift */; };
 		FFFFFFFFFFFFFFFF000C /* FirstRunSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFFFFFFFFFFFFFF000B /* FirstRunSheet.swift */; };
 		DDDDDDDDDDDDDDDDDDDD0002 /* AceEditor in Resources */ = {isa = PBXBuildFile; fileRef = DDDDDDDDDDDDDDDDDDDD0001 /* AceEditor */; };
+		SSSSSSSSSSSSSSSSSSSS0002 /* ArchiveSecurity.swift in Sources */ = {isa = PBXBuildFile; fileRef = SSSSSSSSSSSSSSSSSSSS0001 /* ArchiveSecurity.swift */; };
+		SSSSSSSSSSSSSSSSSSSS0003 /* ArchiveSecurity.swift in Sources */ = {isa = PBXBuildFile; fileRef = SSSSSSSSSSSSSSSSSSSS0001 /* ArchiveSecurity.swift */; };
+		TTTTTTTTTTTTTTTTTTTT0003 /* ArchiveSecurityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TTTTTTTTTTTTTTTTTTTT0002 /* ArchiveSecurityTests.swift */; };
+		EEEEEEEEEEEEEEEEEEEF0003 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = EEEEEEEEEEEEEEEEEEEF0002 /* Sparkle */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -94,11 +98,22 @@
 		FFFFFFFFFFFFFFFF0007 /* MarkdownFormatActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownFormatActions.swift; sourceTree = "<group>"; };
 		FFFFFFFFFFFFFFFF0009 /* MarkdownEditorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownEditorController.swift; sourceTree = "<group>"; };
 		FFFFFFFFFFFFFFFF000B /* FirstRunSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunSheet.swift; sourceTree = "<group>"; };
+		SSSSSSSSSSSSSSSSSSSS0001 /* ArchiveSecurity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveSecurity.swift; sourceTree = "<group>"; };
+		TTTTTTTTTTTTTTTTTTTT0001 /* FinderFlowTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FinderFlowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		TTTTTTTTTTTTTTTTTTTT0002 /* ArchiveSecurityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveSecurityTests.swift; sourceTree = "<group>"; };
 		DDDDDDDDDDDDDDDDDDDD0001 /* AceEditor */ = {isa = PBXFileReference; lastKnownFileType = folder; path = AceEditor; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		AAAAAAAAAAAAAAAAAAAA000B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EEEEEEEEEEEEEEEEEEEF0003 /* Sparkle in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		TTTTTTTTTTTTTTTTTTTT0012 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -121,6 +136,7 @@
 			children = (
 				AAAAAAAAAAAAAAAAAAAA000E /* FinderFlow */,
 				AAAAAAAAAAAAAAAAAAAA006F /* FinderFlowExtension */,
+				TTTTTTTTTTTTTTTTTTTT0020 /* FinderFlowTests */,
 				AAAAAAAAAAAAAAAAAAAA0072 /* Frameworks */,
 				AAAAAAAAAAAAAAAAAAAA000D /* Products */,
 			);
@@ -131,6 +147,7 @@
 			children = (
 				AAAAAAAAAAAAAAAAAAAA000F /* FinderFlow.app */,
 				AAAAAAAAAAAAAAAAAAAA0042 /* FinderFlowExtension.appex */,
+				TTTTTTTTTTTTTTTTTTTT0001 /* FinderFlowTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -164,6 +181,7 @@
 				FFFFFFFFFFFFFFFF0007 /* MarkdownFormatActions.swift */,
 				FFFFFFFFFFFFFFFF0009 /* MarkdownEditorController.swift */,
 				FFFFFFFFFFFFFFFF000B /* FirstRunSheet.swift */,
+				SSSSSSSSSSSSSSSSSSSS0001 /* ArchiveSecurity.swift */,
 				DDDDDDDDDDDDDDDDDDDD0001 /* AceEditor */,
 			);
 			path = FinderFlow;
@@ -187,6 +205,14 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		TTTTTTTTTTTTTTTTTTTT0020 /* FinderFlowTests */ = {
+			isa = PBXGroup;
+			children = (
+				TTTTTTTTTTTTTTTTTTTT0002 /* ArchiveSecurityTests.swift */,
+			);
+			path = FinderFlowTests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -205,9 +231,29 @@
 				AAAAAAAAAAAAAAAAAAAA0061 /* PBXTargetDependency */,
 			);
 			name = FinderFlow;
+			packageProductDependencies = (
+				EEEEEEEEEEEEEEEEEEEF0002 /* Sparkle */,
+			);
 			productName = FinderFlow;
 			productReference = AAAAAAAAAAAAAAAAAAAA000F /* FinderFlow.app */;
 			productType = "com.apple.product-type.application";
+		};
+		TTTTTTTTTTTTTTTTTTTT0010 /* FinderFlowTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = TTTTTTTTTTTTTTTTTTTT0016 /* Build configuration list for PBXNativeTarget "FinderFlowTests" */;
+			buildPhases = (
+				TTTTTTTTTTTTTTTTTTTT0011 /* Sources */,
+				TTTTTTTTTTTTTTTTTTTT0013 /* Resources */,
+				TTTTTTTTTTTTTTTTTTTT0012 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FinderFlowTests;
+			productName = FinderFlowTests;
+			productReference = TTTTTTTTTTTTTTTTTTTT0001 /* FinderFlowTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		AAAAAAAAAAAAAAAAAAAA0030 /* FinderFlowExtension */ = {
 			isa = PBXNativeTarget;
@@ -256,9 +302,13 @@
 			productRefGroup = AAAAAAAAAAAAAAAAAAAA000D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
+			packageReferences = (
+				EEEEEEEEEEEEEEEEEEEF0001 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			targets = (
 				AAAAAAAAAAAAAAAAAAAA0002 /* FinderFlow */,
 				AAAAAAAAAAAAAAAAAAAA0030 /* FinderFlowExtension */,
+				TTTTTTTTTTTTTTTTTTTT0010 /* FinderFlowTests */,
 			);
 		};
 /* End PBXProject section */
@@ -274,6 +324,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		AAAAAAAAAAAAAAAAAAAA0035 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		TTTTTTTTTTTTTTTTTTTT0013 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -310,6 +367,16 @@
 				FFFFFFFFFFFFFFFF0008 /* MarkdownFormatActions.swift in Sources */,
 				FFFFFFFFFFFFFFFF000A /* MarkdownEditorController.swift in Sources */,
 				FFFFFFFFFFFFFFFF000C /* FirstRunSheet.swift in Sources */,
+				SSSSSSSSSSSSSSSSSSSS0002 /* ArchiveSecurity.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		TTTTTTTTTTTTTTTTTTTT0011 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				TTTTTTTTTTTTTTTTTTTT0003 /* ArchiveSecurityTests.swift in Sources */,
+				SSSSSSSSSSSSSSSSSSSS0003 /* ArchiveSecurity.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -432,7 +499,7 @@
 				CODE_SIGN_ENTITLEMENTS = FinderFlow/FinderFlow.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -441,7 +508,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.2;
+				MARKETING_VERSION = 1.5.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finderflow.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -457,7 +524,7 @@
 				CODE_SIGN_ENTITLEMENTS = FinderFlow/FinderFlow.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -466,7 +533,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.2;
+				MARKETING_VERSION = 1.5.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finderflow.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -479,7 +546,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = FinderFlowExtension/FinderFlowExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FinderFlowExtension/Info.plist;
@@ -488,7 +555,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.2;
+				MARKETING_VERSION = 1.5.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finderflow.app.extension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -502,7 +569,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = FinderFlowExtension/FinderFlowExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FinderFlowExtension/Info.plist;
@@ -511,11 +578,43 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.2;
+				MARKETING_VERSION = 1.5.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.finderflow.app.extension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		TTTTTTTTTTTTTTTTTTTT0014 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 9;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.5.3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finderflow.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		TTTTTTTTTTTTTTTTTTTT0015 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 9;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.5.3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.finderflow.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -550,7 +649,35 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		TTTTTTTTTTTTTTTTTTTT0016 /* Build configuration list for PBXNativeTarget "FinderFlowTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				TTTTTTTTTTTTTTTTTTTT0014 /* Debug */,
+				TTTTTTTTTTTTTTTTTTTT0015 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		EEEEEEEEEEEEEEEEEEEF0001 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		EEEEEEEEEEEEEEEEEEEF0002 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EEEEEEEEEEEEEEEEEEEF0001 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AAAAAAAAAAAAAAAAAAAA0001 /* Project object */;
 }

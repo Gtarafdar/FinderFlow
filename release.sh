@@ -165,14 +165,55 @@ hdiutil detach "$MOUNT_DIR" -quiet || hdiutil detach "$MOUNT_DIR" -force -quiet
 hdiutil convert "$TMP_DMG" -format UDZO -imagekey zlib-level=9 -o "$DMG" >/dev/null
 rm -f "$TMP_DMG"
 
+echo "==> Signing the DMG with Sparkle"
+KEY="${FINDERFLOW_SPARKLE_KEY:-$HOME/.finderflow/sparkle_eddsa_private_key}"
+SIGN_UPDATE="${FINDERFLOW_SIGN_UPDATE:-$HOME/.finderflow/bin/sign_update}"
+if [ ! -f "$KEY" ]; then
+    echo "ERROR: Sparkle private key not found at $KEY" >&2
+    echo "That file is created once and must stay off GitHub. Back it up." >&2
+    exit 1
+fi
+if [ ! -x "$SIGN_UPDATE" ]; then
+    echo "ERROR: sign_update not found at $SIGN_UPDATE" >&2
+    exit 1
+fi
+SIGNATURE_LINE=$("$SIGN_UPDATE" --ed-key-file "$KEY" "$DMG")
+ED_SIG=$(printf '%s\n' "$SIGNATURE_LINE" | sed -n 's/.*edSignature="\([^"]*\)".*/\1/p')
+LENGTH=$(printf '%s\n' "$SIGNATURE_LINE" | sed -n 's/.*length="\([^"]*\)".*/\1/p')
+if [ -z "$ED_SIG" ] || [ -z "$LENGTH" ]; then
+    echo "ERROR: sign_update did not return a signature" >&2
+    printf '%s\n' "$SIGNATURE_LINE" >&2
+    exit 1
+fi
+BUILD=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "$APP/Contents/Info.plist")
+PUBDATE=$(date "+%a, %d %b %Y %H:%M:%S %z")
+DOWNLOAD_URL="https://github.com/Gtarafdar/FinderFlow/releases/download/v${VERSION}/FinderFlow-${VERSION}.dmg"
+APPCAST="docs/appcast.xml"
+cat > "$APPCAST" <<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>FinderFlow</title>
+    <link>https://gtarafdar.github.io/FinderFlow/appcast.xml</link>
+    <description>Signed FinderFlow updates.</description>
+    <language>en</language>
+    <item>
+      <title>Version ${VERSION}</title>
+      <pubDate>${PUBDATE}</pubDate>
+      <sparkle:version>${BUILD}</sparkle:version>
+      <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <enclosure url="${DOWNLOAD_URL}" sparkle:edSignature="${ED_SIG}" length="${LENGTH}" type="application/octet-stream"/>
+    </item>
+  </channel>
+</rss>
+EOF
+cp "$APPCAST" "$OUT/appcast.xml"
+
 echo "==> Done"
-SHA256=$(shasum -a 256 "$DMG" | cut -d' ' -f1)
-CHECKSUM="$DMG.sha256"
-# Standard `shasum -c` format: "<hash>  <basename>"
-echo "$SHA256  $(basename "$DMG")" > "$CHECKSUM"
 echo "    DMG:      $DMG"
-echo "    Checksum: $CHECKSUM"
+echo "    Appcast:  $APPCAST"
 echo "    Size:     $(du -h "$DMG" | cut -f1)"
-echo "    SHA256:   $SHA256"
 echo ""
-echo "Upload $DMG and $CHECKSUM to your GitHub Release."
+echo "Upload $DMG to the GitHub Release, and publish docs/appcast.xml with the website."
+echo "The Sparkle signature is what proves the download came from you. A checksum next to the file does not."

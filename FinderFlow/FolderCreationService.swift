@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import Darwin
 
 // MARK: - Permanent delete confirmation (shared across all views)
 
@@ -296,46 +297,38 @@ class FileOperationsService: ObservableObject {
 
     func extract(_ url: URL, reload: @escaping () -> Void) {
         let dest = url.deletingLastPathComponent()
-        let ext  = url.pathExtension.lowercased()
-
-        // Prefer The Unarchiver when installed (modern bundle-id lookup; the old
-        // fullPath(forApplication:) name-based API is deprecated).
-        let unarchiverIDs = ["cx.c3.theunarchiver", "com.macpaw.site.theunarchiver"]
-        if let unaURL = unarchiverIDs.lazy
-            .compactMap({ NSWorkspace.shared.urlForApplication(withBundleIdentifier: $0) })
-            .first {
-            NSWorkspace.shared.open(
-                [url],
-                withApplicationAt: unaURL,
-                configuration: NSWorkspace.OpenConfiguration()
-            ) { _, _ in DispatchQueue.main.async { reload() } }
+        guard archiveKind(for: url) != nil else {
+            errorMessage = "FinderFlow can't extract this file type."
             return
         }
 
         DispatchQueue.global(qos: .userInitiated).async {
-            let p = Process()
-            switch ext {
-            case "zip":
-                p.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
-                p.arguments     = ["-o", url.path, "-d", dest.path]
-            case "tar":
-                p.executableURL = URL(fileURLWithPath: "/usr/bin/tar")
-                p.arguments     = ["-xf", url.path, "-C", dest.path]
-            case "gz", "tgz":
-                p.executableURL = URL(fileURLWithPath: "/usr/bin/tar")
-                p.arguments     = ["-xzf", url.path, "-C", dest.path]
-            case "bz2":
-                p.executableURL = URL(fileURLWithPath: "/usr/bin/tar")
-                p.arguments     = ["-xjf", url.path, "-C", dest.path]
-            case "xz":
-                p.executableURL = URL(fileURLWithPath: "/usr/bin/tar")
-                p.arguments     = ["-xJf", url.path, "-C", dest.path]
-            default:
-                DispatchQueue.main.async { NSWorkspace.shared.open(url) }
-                return
+            do {
+                let entries = try self.listArchiveEntries(url)
+                guard !entries.isEmpty else {
+                    throw ArchiveToolError(message: "This archive is empty.")
+                }
+                guard entries.allSatisfy(archiveEntryIsSafe) else {
+                    throw ArchiveToolError(message: "This archive can't be extracted because it contains an unsafe path.")
+                }
+                let top = archiveTopLevelNames(entries)
+                let collisions = top.filter {
+                    FileManager.default.fileExists(atPath: dest.appendingPathComponent($0).path)
+                }
+                DispatchQueue.main.async {
+                    if !collisions.isEmpty && !self.confirmExtractOverwrite(collisions) { return }
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        do {
+                            try self.extractArchive(url, into: dest, replacing: collisions)
+                            DispatchQueue.main.async { reload() }
+                        } catch {
+                            DispatchQueue.main.async { self.errorMessage = error.localizedDescription }
+                        }
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async { self.errorMessage = error.localizedDescription }
             }
-            do { try p.run(); p.waitUntilExit(); DispatchQueue.main.async { reload() } }
-            catch { DispatchQueue.main.async { self.errorMessage = error.localizedDescription } }
         }
     }
 
@@ -344,17 +337,23 @@ class FileOperationsService: ObservableObject {
     func compress(_ urls: [URL], reload: @escaping () -> Void) {
         guard let first = urls.first else { return }
         let base    = first.deletingLastPathComponent()
+        let names   = urls.map(\.lastPathComponent)
         let zipName = urls.count == 1
             ? first.deletingPathExtension().lastPathComponent + ".zip"
             : "Archive.zip"
         let dest = uniqueURL(for: base.appendingPathComponent(zipName))
+        guard let arguments = zipArguments(archivePath: dest.path, names: names) else {
+            errorMessage = "One of these items can't be compressed because its name isn't allowed."
+            return
+        }
         DispatchQueue.global(qos: .userInitiated).async {
-            let p = Process()
-            p.executableURL      = URL(fileURLWithPath: "/usr/bin/zip")
-            p.currentDirectoryURL = base
-            p.arguments = ["-r", dest.path] + urls.map { $0.lastPathComponent }
-            do { try p.run(); p.waitUntilExit(); DispatchQueue.main.async { reload() } }
-            catch { DispatchQueue.main.async { self.errorMessage = error.localizedDescription } }
+            do {
+                try self.runTool("/usr/bin/zip", arguments, currentDirectory: base)
+                DispatchQueue.main.async { reload() }
+            } catch {
+                try? FileManager.default.removeItem(at: dest)
+                DispatchQueue.main.async { self.errorMessage = error.localizedDescription }
+            }
         }
     }
 
@@ -512,6 +511,176 @@ class FileOperationsService: ObservableObject {
             n += 1
         }
         return url
+    }
+
+    private enum ArchiveKind {
+        case zip
+        case tar
+    }
+
+    private struct ArchiveToolError: LocalizedError {
+        let message: String
+        var errorDescription: String? { message }
+    }
+
+    private func archiveKind(for url: URL) -> ArchiveKind? {
+        let name = url.lastPathComponent.lowercased()
+        if name.hasSuffix(".zip") { return .zip }
+        if name.hasSuffix(".tar")
+            || name.hasSuffix(".tgz")
+            || name.hasSuffix(".tar.gz")
+            || name.hasSuffix(".tar.bz2")
+            || name.hasSuffix(".tar.xz")
+            || name.hasSuffix(".gz")
+            || name.hasSuffix(".bz2")
+            || name.hasSuffix(".xz") {
+            return .tar
+        }
+        return nil
+    }
+
+    private func confirmExtractOverwrite(_ names: [String]) -> Bool {
+        let alert = NSAlert()
+        let label = names.count == 1 ? "\"\(names[0])\"" : "\(names.count) items"
+        alert.messageText = "Replace existing \(label)?"
+        alert.informativeText = "Extracting will replace items already in this folder. This cannot be undone."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Replace")
+        alert.addButton(withTitle: "Cancel")
+        return alert.runModal() == .alertFirstButtonReturn
+    }
+
+    private func listArchiveEntries(_ url: URL) throws -> [String] {
+        let output: String
+        switch archiveKind(for: url) {
+        case .zip:
+            output = try runTool("/usr/bin/unzip", ["-Z1", "--", url.path])
+        case .tar:
+            output = try runTool("/usr/bin/tar", ["-tf", url.path])
+        case nil:
+            throw ArchiveToolError(message: "FinderFlow can't extract this file type.")
+        }
+        return output.split(whereSeparator: \.isNewline).map(String.init).filter { !$0.isEmpty }
+    }
+
+    private func extractArchive(_ url: URL, into dest: URL, replacing collisions: [String]) throws {
+        let fm = FileManager.default
+        let temp = fm.temporaryDirectory
+            .appendingPathComponent("finderflow-extract-\(UUID().uuidString)", isDirectory: true)
+        try fm.createDirectory(at: temp, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: temp) }
+
+        switch archiveKind(for: url) {
+        case .zip:
+            try runTool("/usr/bin/unzip", ["-qq", "--", url.path, "-d", temp.path])
+        case .tar:
+            try runTool("/usr/bin/tar", ["-xf", url.path, "-C", temp.path])
+        case nil:
+            throw ArchiveToolError(message: "FinderFlow can't extract this file type.")
+        }
+
+        if try treeContainsEscapingSymlink(temp) {
+            throw ArchiveToolError(message: "This archive can't be extracted because it contains a link that points outside the archive.")
+        }
+        copyQuarantine(from: url, onto: temp)
+
+        let allowed = Set(collisions)
+        for name in try fm.contentsOfDirectory(atPath: temp.path) {
+            let source = temp.appendingPathComponent(name)
+            let target = dest.appendingPathComponent(name)
+            if fm.fileExists(atPath: target.path) {
+                guard allowed.contains(name) else {
+                    throw ArchiveToolError(message: "Couldn't extract because \"\(name)\" already exists.")
+                }
+                try fm.removeItem(at: target)
+            }
+            try fm.moveItem(at: source, to: target)
+        }
+    }
+
+    private func treeContainsEscapingSymlink(_ root: URL) throws -> Bool {
+        let fm = FileManager.default
+        func walk(_ dir: URL) throws -> Bool {
+            let kids = try fm.contentsOfDirectory(
+                at: dir,
+                includingPropertiesForKeys: [.isSymbolicLinkKey, .isDirectoryKey],
+                options: []
+            )
+            for kid in kids {
+                let values = try kid.resourceValues(forKeys: [.isSymbolicLinkKey, .isDirectoryKey])
+                if values.isSymbolicLink == true {
+                    if symlinkEscapesRoot(kid, root: root) { return true }
+                    continue
+                }
+                if values.isDirectory == true, try walk(kid) { return true }
+            }
+            return false
+        }
+        return try walk(root)
+    }
+
+    private func copyQuarantine(from source: URL, onto root: URL) {
+        let key = "com.apple.quarantine"
+        let length = getxattr(source.path, key, nil, 0, 0, XATTR_NOFOLLOW)
+        guard length > 0 else { return }
+        var bytes = [UInt8](repeating: 0, count: length)
+        let read = bytes.withUnsafeMutableBytes { buffer -> ssize_t in
+            guard let base = buffer.baseAddress else { return -1 }
+            return getxattr(source.path, key, base, length, 0, XATTR_NOFOLLOW)
+        }
+        guard read > 0 else { return }
+
+        func apply(_ url: URL) {
+            _ = bytes.withUnsafeBytes { buffer -> Int32 in
+                guard let base = buffer.baseAddress else { return -1 }
+                return setxattr(url.path, key, base, read, 0, XATTR_NOFOLLOW)
+            }
+            let values = try? url.resourceValues(forKeys: [.isSymbolicLinkKey, .isDirectoryKey])
+            if values?.isSymbolicLink == true { return }
+            guard values?.isDirectory == true,
+                  let kids = try? FileManager.default.contentsOfDirectory(
+                    at: url, includingPropertiesForKeys: [.isSymbolicLinkKey, .isDirectoryKey], options: []
+                  ) else { return }
+            kids.forEach(apply)
+        }
+        apply(root)
+    }
+
+    @discardableResult
+    private func runTool(_ launchPath: String, _ arguments: [String], currentDirectory: URL? = nil) throws -> String {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: launchPath)
+        process.arguments = arguments
+        process.currentDirectoryURL = currentDirectory
+        let stdout = Pipe()
+        let stderr = Pipe()
+        process.standardOutput = stdout
+        process.standardError = stderr
+        try process.run()
+
+        let group = DispatchGroup()
+        var outData = Data()
+        var errData = Data()
+        group.enter()
+        DispatchQueue.global(qos: .userInitiated).async {
+            outData = stdout.fileHandleForReading.readDataToEndOfFile()
+            group.leave()
+        }
+        group.enter()
+        DispatchQueue.global(qos: .userInitiated).async {
+            errData = stderr.fileHandleForReading.readDataToEndOfFile()
+            group.leave()
+        }
+        process.waitUntilExit()
+        group.wait()
+
+        let output = String(decoding: outData, as: UTF8.self)
+        let errorText = String(decoding: errData, as: UTF8.self)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard process.terminationStatus == 0 else {
+            throw ArchiveToolError(message: errorText.isEmpty ? "Couldn't read this archive." : errorText)
+        }
+        return output
     }
 }
 

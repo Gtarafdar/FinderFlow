@@ -67,8 +67,6 @@ struct SettingsView: View {
     @State private var isDefault = DefaultFolderHandler.isDefault
     @State private var working = false
     @State private var statusMessage: String?
-    @State private var updateStatusMessage: String?
-
     @AppStorage("ffEditorSniffUnknown") private var sniffUnknown = true
     @AppStorage(UserPreferences.viewModeKey)       private var viewModeRaw    = UserPreferences.defaultViewMode.rawValue
     @AppStorage(UserPreferences.sortFieldKey)      private var sortFieldRaw   = UserPreferences.defaultSortField.rawValue
@@ -89,27 +87,12 @@ struct SettingsView: View {
                 LabeledContent("Version", value: updateManager.currentVersion)
                 Toggle("Check for updates automatically", isOn: autoCheckBinding)
                 Button("Check for Updates…") {
-                    updateStatusMessage = nil
-                    Task {
-                        await updateManager.checkForUpdates(force: true)
-                        switch updateManager.phase {
-                        case .upToDate:
-                            updateStatusMessage = "You're on the latest version."
-                        case .available(let v, _, _):
-                            updateStatusMessage = "Version \(v) is available — use the banner in the main window to install."
-                        case .error(let m):
-                            updateStatusMessage = m
-                        default:
-                            break
-                        }
-                    }
+                    updateManager.checkForUpdates()
                 }
-                if let updateStatusMessage {
-                    Text(updateStatusMessage)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                Text("Sparkle installs an update only when it carries the maintainer's signature. Version 1.5.2 and earlier need one manual download from GitHub.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             Section("Browse defaults") {

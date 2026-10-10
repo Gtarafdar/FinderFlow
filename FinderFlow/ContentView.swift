@@ -6,7 +6,6 @@ struct ContentView: View {
     @StateObject private var searchEngine  = SearchEngine()
     @StateObject private var fileOps       = FileOperationsService()
     @StateObject private var tagService    = TagService()
-    @ObservedObject private var updateManager = UpdateManager.shared
     @EnvironmentObject  var  favorites:      FavoritesService
 
     @State private var currentPath:     URL       = FileManager.default.homeDirectoryForCurrentUser
@@ -77,9 +76,6 @@ struct ContentView: View {
                 .resetsCursorOnEnter()           // clears the divider's stuck resize cursor on entry
         } detail: {
             VStack(spacing: 0) {
-                if case .available(let version, _, _) = updateManager.phase {
-                    UpdateBanner(manager: updateManager, version: version)
-                }
                 PathBarView(currentPath: $currentPath)
                     .resetsCursorOnEnter()   // clear a stuck resize cursor when moving up from the file list
                 SearchScopeView(currentPath: currentPath, searchEngine: searchEngine)
@@ -156,7 +152,6 @@ struct ContentView: View {
         .onAppear {
             UserPreferences.migrateBrowseDefaultsIfNeeded()
             reload()
-            updateManager.checkIfNeeded()
             if !didShowFirstRun {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                     showFirstRun = true

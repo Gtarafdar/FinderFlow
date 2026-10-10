@@ -19,3 +19,7 @@ xcuserdata/
 *.moved-aside
 *.hmap
 *.ipa
+
+# Sparkle private key and the private reply must never be committed
+sparkle_eddsa_private_key
+REPLY-TO-TODD.txt

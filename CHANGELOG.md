@@ -5,6 +5,15 @@ relative to the 1.0 release.
 
 ---
 
+## 1.5.3 — Safer archives and signed updates
+
+- **Compress** stores symbolic links and no longer treats file names as zip options.
+- **Extract Here** asks before replacing existing items, refuses archives with unsafe paths, and keeps a download's quarantine flag on extracted files.
+- **Web links** can only open a normal folder in FinderFlow.
+- **Updates** are installed only when they carry the maintainer's Sparkle signature. Version 1.5.2 and earlier cannot take this update from inside the app — download 1.5.3 once from GitHub Releases.
+
+---
+
 ## 1.5.2 — Faster folder & file open
 
 - **Snappier navigation** — clear the stale listing immediately on folder
