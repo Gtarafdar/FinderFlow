@@ -57,6 +57,7 @@ struct ListView: View {
             TableColumn("Name", value: \.name) { item in
                 HStack(spacing: 6) {
                     Image(nsImage: item.icon).resizable().frame(width: 16, height: 16)
+                        .allowsHitTesting(false)
                     if renamingID == item.id {
                         TextField("", text: $renameText)
                             .textFieldStyle(.plain)
@@ -72,9 +73,12 @@ struct ListView: View {
                         Text(item.name).lineLimit(1)
                             .foregroundStyle(fileOps.isCut && fileOps.clipboardURLs.contains(item.url)
                                              ? Color.secondary : Color.primary)
+                            .allowsHitTesting(false)
                     }
                     TagDotsView(colors: item.tagColors, size: 10)
+                        .allowsHitTesting(false)
                 }
+                .contentShape(Rectangle())
                 .fileDragOut(item: item, files: files, selectedIDs: selectedIDs)
             }
             .width(min: 140, ideal: 280, max: 600)
@@ -127,7 +131,13 @@ struct ListView: View {
             commitRename(for: item)
         }
         .onAppear { syncSortOrder() }
-        .contextMenu(forSelectionType: String.self) { ids in contextMenu(for: ids) }
+        .contextMenu(forSelectionType: String.self) { ids in
+            if ids.isEmpty {
+                FolderBackgroundMenu()
+            } else {
+                contextMenu(for: ids)
+            }
+        }
         primaryAction: { ids in
             guard renamingID == nil else { return }
             if let id = ids.first, let item = files.first(where: { $0.id == id }) {
@@ -314,6 +324,20 @@ struct GroupedListView: View {
                         ZStack(alignment: .leading) {
                             GroupedRow(item: item, isSelected: selectedIDs.contains(item.id))
                                 .opacity(renamingID == item.id ? 0 : 1)
+                                .allowsHitTesting(false)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(
+                                    Color.clear
+                                        .contentShape(Rectangle())
+                                        .onTapGesture(count: 2) {
+                                            guard renamingID == nil else { return }
+                                            onNavigate(item)
+                                        }
+                                        .onTapGesture {
+                                            guard renamingID == nil else { return }
+                                            selectedIDs = [item.id]
+                                        }
+                                )
                             if renamingID == item.id {
                                 HStack(spacing: 8) {
                                     Image(nsImage: item.icon).resizable().frame(width: 18, height: 18)
@@ -335,11 +359,6 @@ struct GroupedListView: View {
                         .tag(item.id)
                         .id(item.id)
                         .fileDragOut(item: item, files: files, selectedIDs: selectedIDs)
-                        .onTapGesture(count: 2) { onNavigate(item) }
-                        .onTapGesture {
-                            selectedIDs = selectedIDs.contains(item.id)
-                                ? [] : [item.id]
-                        }
                         .contextMenu { listContextMenu(item: item) }
                     }
                 } header: {
@@ -348,6 +367,15 @@ struct GroupedListView: View {
             }
         }
         .listStyle(.inset)
+        .contextMenu(forSelectionType: String.self) { ids in
+            if ids.isEmpty {
+                FolderBackgroundMenu()
+            } else {
+                if let id = ids.first, let item = files.first(where: { $0.id == id }) {
+                    listContextMenu(item: item)
+                }
+            }
+        }
         .onChange(of: selectedIDs) { _, ids in
             if let id = ids.first {
                 withAnimation { proxy.scrollTo(id, anchor: .center) }
@@ -477,20 +505,24 @@ struct GroupedRow: View {
     var body: some View {
         HStack(spacing: 8) {
             Image(nsImage: item.icon).resizable().frame(width: 18, height: 18)
+                .allowsHitTesting(false)
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 5) {
                     Text(item.name).font(.system(size: 13)).lineLimit(1)
+                        .allowsHitTesting(false)
                     TagDotsView(colors: item.tagColors, size: 9)
+                        .allowsHitTesting(false)
                 }
                 Text(item.kind + (item.isDirectory ? "" : " • \(item.formattedSize)"))
                     .font(.caption).foregroundStyle(.secondary)
+                    .allowsHitTesting(false)
             }
             Spacer()
             Text(item.formattedDateModified)
                 .font(.caption).foregroundStyle(.secondary)
         }
         .padding(.vertical, 2)
-        .contentShape(Rectangle())
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
@@ -517,6 +549,17 @@ struct DateSectionHeader: View {
         .background(Color(nsColor: .controlBackgroundColor).opacity(0.8))
         .overlay(alignment: .bottom) {
             Divider().opacity(0.6)
+        }
+    }
+}
+
+struct FolderBackgroundMenu: View {
+    var body: some View {
+        Button("New Folder") {
+            NotificationCenter.default.post(name: .createNewFolder, object: nil)
+        }
+        Button("New File") {
+            NotificationCenter.default.post(name: .createNewFile, object: nil)
         }
     }
 }

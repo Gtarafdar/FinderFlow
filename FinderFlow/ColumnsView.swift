@@ -43,23 +43,28 @@ struct ColumnsView: View {
             HStack(spacing: 8) {
                 Image(nsImage: item.icon)
                     .resizable().frame(width: 16, height: 16)
+                    .allowsHitTesting(false)
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 4) {
                         Text(item.name)
                             .font(.system(size: 12))
                             .lineLimit(1)
+                            .allowsHitTesting(false)
                         TagDotsView(colors: item.tagColors, size: 9)
+                            .allowsHitTesting(false)
                     }
                     Text(item.url.deletingLastPathComponent().path)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                        .allowsHitTesting(false)
                 }
                 Spacer()
                 if item.isBrowsableFolder {
                     Image(systemName: "chevron.right")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
+                        .allowsHitTesting(false)
                 }
             }
             .padding(.vertical, 2)
@@ -402,6 +407,7 @@ struct ColumnPane: View {
 
     @State private var items: [FileItem] = []
     @State private var reloadGeneration: UInt = 0
+    @State private var folderWatcher = FolderChangeWatcher()
 
     private var groups: [FileGroup] { groupedItems(items, by: groupBy) }
 
@@ -424,13 +430,26 @@ struct ColumnPane: View {
         .contextMenu {
             Button("Paste") { fileOps.paste(to: directory, reload: reload) }
                 .disabled(fileOps.pasteboardURLs.isEmpty)
+            Divider()
+            Button("New Folder") {
+                NotificationCenter.default.post(name: .createNewFolder, object: nil)
+            }
+            Button("New File") {
+                NotificationCenter.default.post(name: .createNewFile, object: nil)
+            }
             if fileOps.canUndo { Button("Undo") { fileOps.undo() } }
             if fileOps.canRedo { Button("Redo") { fileOps.redo() } }
             Divider()
             Button("Refresh") { reload() }
         }
-        .onAppear    { reload() }
-        .onChange(of: directory)  { _, _ in reload() }
+        .onAppear {
+            reload()
+            watchFolder()
+        }
+        .onChange(of: directory) { _, _ in
+            reload()
+            watchFolder()
+        }
         .onChange(of: showHidden) { _, _ in reload() }
         .onChange(of: sortField)     { _, _ in reload() }
         .onChange(of: sortAscending) { _, _ in reload() }
@@ -442,20 +461,22 @@ struct ColumnPane: View {
 
     @ViewBuilder
     private func rowFor(_ item: FileItem) -> some View {
-        ColumnRow(item: item, isHighlighted: highlightedURL == item.url)
-            .contentShape(Rectangle())
-            .fileDragOut(item: item, files: items, selectedIDs: highlightedURL == item.url ? [item.id] : [])
-            .simultaneousGesture(TapGesture(count: 2).onEnded {
-                if item.isBrowsableFolder {
-                    onSelect(item)
-                } else {
-                    onOpen(item.url)
+        ZStack {
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture(count: 2) {
+                    if item.isBrowsableFolder {
+                        onSelect(item)
+                    } else {
+                        onOpen(item.url)
+                    }
                 }
-            })
-            .simultaneousGesture(TapGesture(count: 1).onEnded {
-                onSelect(item)
-            })
-            .contextMenu { columnContextMenu(item: item) }
+                .onTapGesture { onSelect(item) }
+            ColumnRow(item: item, isHighlighted: highlightedURL == item.url)
+                .allowsHitTesting(false)
+        }
+        .fileDragOut(item: item, files: items, selectedIDs: highlightedURL == item.url ? [item.id] : [])
+        .contextMenu { columnContextMenu(item: item) }
     }
 
     // MARK: - Full context menu
@@ -530,6 +551,14 @@ struct ColumnPane: View {
 
     // MARK: - Helpers
 
+    private func watchFolder() {
+        let directory = directory
+        folderWatcher.onChange = {
+            NotificationCenter.default.post(name: .refreshDirectory, object: directory)
+        }
+        folderWatcher.watch(directory)
+    }
+
     private func reload() {
         reloadGeneration &+= 1
         let gen    = reloadGeneration
@@ -577,11 +606,15 @@ struct ColumnRow: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(nsImage: item.icon).resizable().frame(width: 16, height: 16)
+                .allowsHitTesting(false)
             Text(item.name).font(.system(size: 12)).lineLimit(1)
+                .allowsHitTesting(false)
             TagDotsView(colors: item.tagColors, size: 9)
+                .allowsHitTesting(false)
             Spacer()
             if item.isBrowsableFolder {
                 Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.secondary)
+                    .allowsHitTesting(false)
             }
         }
         .padding(.vertical, 2)

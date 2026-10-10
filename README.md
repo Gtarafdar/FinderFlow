@@ -210,7 +210,7 @@ eating your RAM:
 
 ## Install
 
-1. Download the latest **`FinderFlow-1.5.2.dmg`** from
+1. Download the latest **`FinderFlow` disk image** from
    [**Releases**](../../releases/latest) and open it.
 2. Drag **FinderFlow** into **Applications**.
 3. **First launch (one-time Gatekeeper step).** FinderFlow is free and isn't
@@ -320,8 +320,8 @@ In-app updates are optional and can be turned off in **Settings → Updates**.
 
 **If you are on 1.5.2 or earlier**
 
-- Download 1.5.3 once from GitHub Releases and replace the app yourself.
-  Update Now in those builds does not install a signed update.
+- Download the latest release once from GitHub Releases and replace the app yourself.
+  Update Now in those builds does not install a signed update. After that, Check for Updates works.
 
 **First launch**
 

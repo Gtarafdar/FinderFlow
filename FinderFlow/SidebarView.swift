@@ -4,6 +4,13 @@ enum SidebarItem: Hashable {
     case location(URL)
     case pinned(URL)
     case recent(URL)
+
+    var folderURL: URL {
+        switch self {
+        case .location(let url), .pinned(let url), .recent(let url):
+            return url
+        }
+    }
 }
 
 // MARK: - Favorites service (pinned folders)
@@ -55,7 +62,6 @@ struct SidebarView: View {
                 ForEach(systemLocations, id: \.self) { url in
                     SidebarRow(url: url)
                         .tag(SidebarItem.location(url))
-                        .onTapGesture { currentPath = url }
                 }
             }
 
@@ -65,7 +71,6 @@ struct SidebarView: View {
                     ForEach(favorites.pinnedURLs, id: \.self) { url in
                         SidebarRow(url: url)
                             .tag(SidebarItem.pinned(url))
-                            .onTapGesture { currentPath = url }
                             .contextMenu {
                                 Button("Remove from Pinned") { favorites.unpin(url) }
                             }
@@ -82,7 +87,6 @@ struct SidebarView: View {
                     ForEach(recentFolders.prefix(8), id: \.self) { url in
                         SidebarRow(url: url)
                             .tag(SidebarItem.recent(url))
-                            .onTapGesture { currentPath = url }
                     }
                 }
             }
@@ -98,8 +102,16 @@ struct SidebarView: View {
         }
         .listStyle(.sidebar)
         .onAppear { loadRecent() }
+        .onChange(of: selection) { _, item in
+            guard let url = item?.folderURL, url != currentPath else { return }
+            // Defer so the sidebar list is not rebuilt inside its own selection update.
+            DispatchQueue.main.async {
+                if currentPath != url { currentPath = url }
+            }
+        }
         .onChange(of: currentPath) { _, path in
-            if path.hasDirectoryPath { addToRecent(path) }
+            guard path.hasDirectoryPath else { return }
+            DispatchQueue.main.async { addToRecent(path) }
         }
     }
 

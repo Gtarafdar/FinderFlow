@@ -154,6 +154,7 @@ struct FinderFlowCommands: Commands {
 
 extension Notification.Name {
     static let createNewFolder   = Notification.Name("createNewFolder")
+    static let createNewFile     = Notification.Name("createNewFile")
     static let toggleHiddenFiles = Notification.Name("toggleHiddenFiles")
     static let navigateToPath    = Notification.Name("navigateToPath")
     static let refreshDirectory  = Notification.Name("FinderFlow.refreshDirectory")

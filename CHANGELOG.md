@@ -5,6 +5,18 @@ relative to the 1.0 release.
 
 ---
 
+## 1.5.4 — Clicks, sidebar, and live folders
+
+- **Clicking a name** selects the item in list, icon, and column view. Double-click opens it.
+- **Sidebar folders** open when you select them.
+- **The open folder refreshes** when files are added or removed by another app.
+- **Command-Delete** moves the selection to the Trash.
+- **Right-clicking empty space** offers New Folder and New File.
+
+People on 1.5.3 can install this from Check for Updates. Version 1.5.2 and earlier still need one download from GitHub Releases.
+
+---
+
 ## 1.5.3 — Safer archives and signed updates
 
 - **Compress** stores symbolic links and no longer treats file names as zip options.

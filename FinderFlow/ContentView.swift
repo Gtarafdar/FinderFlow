@@ -1,5 +1,6 @@
 import SwiftUI
 import Quartz
+import Darwin
 
 struct ContentView: View {
     @StateObject private var folderService = FolderCreationService()
@@ -22,6 +23,7 @@ struct ContentView: View {
     @AppStorage(UserPreferences.showColumnTreeKey) private var showColumnTree    = false
     @AppStorage(UserPreferences.didShowFirstRunKey) private var didShowFirstRun  = false
     @State private var showFirstRun = false
+    @State private var folderWatcher = FolderChangeWatcher()
 
     private var viewMode: ViewMode       { ViewMode.fromStorage(viewModeRaw) }
     private var sortField: SortField     { SortField.fromStorage(sortFieldRaw) }
@@ -152,6 +154,7 @@ struct ContentView: View {
         .onAppear {
             UserPreferences.migrateBrowseDefaultsIfNeeded()
             reload()
+            watchOpenFolder()
             if !didShowFirstRun {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                     showFirstRun = true
@@ -173,6 +176,7 @@ struct ContentView: View {
             selectedIDs = []
             activeTagFilter = nil
             reload()
+            watchOpenFolder()
         }
         .onChange(of: sortFieldRaw)     { _, _  in
             rawFiles = sortedItems(rawFiles, by: sortField, ascending: sortAscending, folderOrder: folderOrder)
@@ -186,7 +190,11 @@ struct ContentView: View {
             rawFiles = sortedItems(rawFiles, by: sortField, ascending: sortAscending, folderOrder: folderOrder)
             resortSearchFiles()
         }
-        .onChange(of: showHidden)    { _, _  in reload() }
+        .onChange(of: showHidden) { _, _ in reload() }
+        .onReceive(NotificationCenter.default.publisher(for: .refreshDirectory)) { note in
+            guard let url = note.object as? URL, url == currentPath else { return }
+            reload()
+        }
         // Recompute Spotlight search results in background (never on the render thread)
         .onChange(of: searchEngine.results) { _, results in
             if results.isEmpty { searchDisplayFiles = []; return }
@@ -213,6 +221,9 @@ struct ContentView: View {
         splitWithChanges
         .onReceive(NotificationCenter.default.publisher(for: .createNewFolder)) { _ in
             promptAndCreateFolder()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .createNewFile)) { _ in
+            promptAndCreateFile()
         }
         .onReceive(NotificationCenter.default.publisher(for: .toggleHiddenFiles)) { _ in
             showHidden.toggle()
@@ -310,6 +321,8 @@ struct ContentView: View {
             }.keyboardShortcut("x", modifiers: .command).hidden()
             Button("") { fileOps.paste(to: pasteDestination, reload: reload) }
                 .keyboardShortcut("v", modifiers: .command).hidden()
+            Button("") { trashSelected() }
+                .keyboardShortcut(.delete, modifiers: .command).hidden()
         }
     }
 
@@ -351,6 +364,12 @@ struct ContentView: View {
     }
 
     // MARK: - Permanent delete with confirmation
+
+    func trashSelected() {
+        let urls = displayFiles.filter { selectedIDs.contains($0.id) }.map(\.url)
+        guard !urls.isEmpty else { return }
+        fileOps.trash(urls, reload: reload)
+    }
 
     func confirmAndDeleteSelected() {
         let items = displayFiles.filter { selectedIDs.contains($0.id) }
@@ -554,6 +573,14 @@ struct ContentView: View {
     }
 
     func reload() { _reload(then: nil) }
+
+    private func watchOpenFolder() {
+        let path = currentPath
+        folderWatcher.onChange = {
+            NotificationCenter.default.post(name: .refreshDirectory, object: path)
+        }
+        folderWatcher.watch(path)
+    }
 
     private func _reload(then: (() -> Void)?) {
         reloadGeneration &+= 1
@@ -891,4 +918,34 @@ extension View {
     /// this view. Use on split-view panes so the divider's resize cursor never
     /// sticks after the pointer moves off the divider onto the pane.
     func resetsCursorOnEnter() -> some View { background(CursorResetOnEnter()) }
+}
+
+final class FolderChangeWatcher {
+    var onChange: (() -> Void)?
+    private var source: DispatchSourceFileSystemObject?
+    private var debounce: DispatchWorkItem?
+
+    func watch(_ url: URL) {
+        debounce?.cancel()
+        debounce = nil
+        source?.cancel()
+        source = nil
+        let fd = Darwin.open(url.path, O_EVTONLY)
+        guard fd >= 0 else { return }
+        let source = DispatchSource.makeFileSystemObjectSource(
+            fileDescriptor: fd,
+            eventMask: [.write, .rename, .delete, .link, .extend],
+            queue: .main
+        )
+        source.setEventHandler { [weak self] in
+            guard let self else { return }
+            self.debounce?.cancel()
+            let work = DispatchWorkItem { [weak self] in self?.onChange?() }
+            self.debounce = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: work)
+        }
+        source.setCancelHandler { Darwin.close(fd) }
+        source.resume()
+        self.source = source
+    }
 }

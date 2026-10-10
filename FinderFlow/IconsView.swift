@@ -27,11 +27,16 @@ struct IconsView: View {
                         Section {
                             LazyVGrid(columns: columns, spacing: 12) {
                                 ForEach(group.items) { item in
-                                    IconCell(item: item, iconSize: iconSize, isSelected: selectedIDs.contains(item.id))
-                                        .fileDragOut(item: item, files: files, selectedIDs: selectedIDs)
-                                        .onTapGesture(count: 2) { onNavigate(item) }
-                                        .onTapGesture         { selectedIDs = [item.id] }
-                                        .contextMenu { iconContextMenu(item: item) }
+                                    ZStack {
+                                        Color.clear
+                                            .contentShape(Rectangle())
+                                            .onTapGesture(count: 2) { onNavigate(item) }
+                                            .onTapGesture { selectedIDs = [item.id] }
+                                        IconCell(item: item, iconSize: iconSize, isSelected: selectedIDs.contains(item.id))
+                                            .allowsHitTesting(false)
+                                    }
+                                    .fileDragOut(item: item, files: files, selectedIDs: selectedIDs)
+                                    .contextMenu { iconContextMenu(item: item) }
                                 }
                             }
                             .padding(.horizontal, 16)
@@ -46,6 +51,7 @@ struct IconsView: View {
                 .padding(.vertical, 12)
             }
             .background(Color(nsColor: .textBackgroundColor))
+            .contextMenu { FolderBackgroundMenu() }
             .background(
                 Button("") { quickLook() }
                     .keyboardShortcut(.space, modifiers: [])
@@ -169,13 +175,16 @@ struct IconCell: View {
             ZStack(alignment: .bottomTrailing) {
                 Image(nsImage: item.icon).resizable().interpolation(.high)
                     .frame(width: iconSize, height: iconSize)
+                    .allowsHitTesting(false)
                 if !item.tagColors.isEmpty {
                     TagDotsView(colors: item.tagColors, size: 10)
                         .offset(x: 2, y: 2)
+                        .allowsHitTesting(false)
                 }
             }
             Text(item.name).font(.caption).lineLimit(2).multilineTextAlignment(.center)
                 .foregroundStyle(isSelected ? .white : .primary)
+                .allowsHitTesting(false)
         }
         .padding(6).frame(maxWidth: .infinity)
         .background(isSelected ? Color.accentColor : Color.clear)
