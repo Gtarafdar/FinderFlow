@@ -3,7 +3,15 @@
   <channel>
     <title>FinderFlow</title>
     <link>https://gtarafdar.github.io/FinderFlow/appcast.xml</link>
-    <description>Signed FinderFlow updates. release.sh replaces this file when a release is built.</description>
+    <description>Signed FinderFlow updates.</description>
     <language>en</language>
+    <item>
+      <title>Version 1.5.3</title>
+      <pubDate>Sat, 10 Oct 2026 13:20:05 +0600</pubDate>
+      <sparkle:version>9</sparkle:version>
+      <sparkle:shortVersionString>1.5.3</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <enclosure url="https://github.com/Gtarafdar/FinderFlow/releases/download/v1.5.3/FinderFlow-1.5.3.dmg" sparkle:edSignature="WMbdodATcHFp1Ikrr09rxO66MtJZR7dNdnlIoxxkjIfK0WGg3+8U83F49zvski11A2hSNpz+zYA0oGGxuF4NCA==" length="6189685" type="application/octet-stream"/>
+    </item>
   </channel>
 </rss>
