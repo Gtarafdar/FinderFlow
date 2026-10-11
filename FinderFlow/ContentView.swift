@@ -34,7 +34,9 @@ struct ContentView: View {
     @State private var rawFiles:            [FileItem] = []
     @State private var searchDisplayFiles:  [FileItem] = []   // pre-computed search results (avoid reloading on every render)
     @State private var pendingSelectURL: URL?
-    @State private var pendingRenameURL: URL?
+    /// Finder-style inline edit: set right after a creation/rename is
+    /// requested; the active view applies it as soon as the item is listed.
+    @State private var pendingInlineEdit: InlineEditTarget?
     @State private var activeTagFilter:  String? = nil
     @State private var tagDisplayFiles:  [FileItem] = []
     @State private var toastItem:        ToastPayload?
@@ -86,8 +88,8 @@ struct ContentView: View {
                     currentPath:    $currentPath,
                     selectedURL:    selectedFolderURL,
                     selectedCount:  selectedIDs.count,
-                    onCreateFolder: promptAndCreateFolder,
-                    onCreateFile:   promptAndCreateFile,
+                    onCreateFolder: { createNewFolderInline() },
+                    onCreateFile:   { createNewFileInline() },
                     onDelete:       confirmAndDeleteSelected,
                     fileOps:        fileOps,
                     viewMode:       viewModeBinding,
@@ -219,11 +221,13 @@ struct ContentView: View {
 
     var body: some View {
         splitWithChanges
-        .onReceive(NotificationCenter.default.publisher(for: .createNewFolder)) { _ in
-            promptAndCreateFolder()
+        // ── Item creation (inline rename) — the notification object may be a
+        // directory (column pane background menu); otherwise use activeDestination.
+        .onReceive(NotificationCenter.default.publisher(for: .createNewFolder)) { note in
+            createNewFolderInline(in: note.object as? URL)
         }
-        .onReceive(NotificationCenter.default.publisher(for: .createNewFile)) { _ in
-            promptAndCreateFile()
+        .onReceive(NotificationCenter.default.publisher(for: .createNewFile)) { note in
+            createNewFileInline(in: note.object as? URL)
         }
         .onReceive(NotificationCenter.default.publisher(for: .toggleHiddenFiles)) { _ in
             showHidden.toggle()
@@ -233,13 +237,15 @@ struct ContentView: View {
             if let url = n.object as? URL, url != currentPath { currentPath = url }
         }
         // Folder/file created → navigate to destination if needed, then select & scroll.
+        // In columns mode the parent pane is already visible in the column chain,
+        // so never navigate — that would collapse the user's columns.
         .onReceive(folderService.$lastCreatedURL.compactMap { $0 }) { url in
             let parent = url.deletingLastPathComponent()
-            if parent != currentPath {
+            if parent != currentPath && viewMode != .columns {
                 // Created inside a subfolder — navigate there so the item is visible.
                 pendingSelectURL = url
                 currentPath = parent            // triggers onChange → reload → select via pendingSelectURL
-            } else {
+            } else if parent == currentPath {
                 _reload {
                     guard let item = rawFiles.first(where: { $0.url == url }) else { return }
                     selectedIDs = [item.id]
@@ -302,65 +308,65 @@ struct ContentView: View {
 
     // MARK: - Keyboard shortcuts (hidden buttons)
     // Extracted from `body` to keep the main view expression within the Swift
-    // type-checker's complexity budget.
+    // type-checker's complexity budget. Each shortcut is a single helper call:
+    // fully chaining 8 Button expressions here overflows the budget and makes
+    // the type checker mis-resolve Group's builder overloads.
 
     @ViewBuilder
     private var keyboardShortcuts: some View {
-        Group {
-            Button("") { fileOps.undo() }
-                .keyboardShortcut("z", modifiers: .command).hidden()
-            Button("") { fileOps.redo() }
-                .keyboardShortcut("z", modifiers: [.command, .shift]).hidden()
-            Button("") {
+        VStack(spacing: 0) {
+            hiddenShortcut(KeyEquivalent("z"), .command) { fileOps.undo() }
+            hiddenShortcut(KeyEquivalent("z"), [.command, .shift]) { fileOps.redo() }
+            hiddenShortcut(KeyEquivalent("c"), .command) {
                 let sel = displayFiles.filter { selectedIDs.contains($0.id) }
                 if !sel.isEmpty { fileOps.copy(sel.map(\.url)) }
-            }.keyboardShortcut("c", modifiers: .command).hidden()
-            Button("") {
+            }
+            hiddenShortcut(KeyEquivalent("x"), .command) {
                 let sel = displayFiles.filter { selectedIDs.contains($0.id) }
                 if !sel.isEmpty { fileOps.cut(sel.map(\.url)) }
-            }.keyboardShortcut("x", modifiers: .command).hidden()
-            Button("") { fileOps.paste(to: pasteDestination, reload: reload) }
-                .keyboardShortcut("v", modifiers: .command).hidden()
-            Button("") { trashSelected() }
-                .keyboardShortcut(.delete, modifiers: .command).hidden()
+            }
+            hiddenShortcut(KeyEquivalent("v"), .command) { fileOps.paste(to: pasteDestination, reload: reload) }
+            hiddenShortcut(.delete, .command) { trashSelected() }
+            // Finder: Return / F2 on a single selection renames it in place.
+            // (F2 has no KeyEquivalent static — 0xF705 is its virtual-key char.)
+            let f2Key = KeyEquivalent(Character(Unicode.Scalar(0xF705)!))
+            hiddenShortcut(.return, []) { startInlineRenameOfSelection() }
+            hiddenShortcut(f2Key, []) { startInlineRenameOfSelection() }
         }
     }
 
-    // MARK: - Pre-named creation dialogs
-
-    // Show a name dialog BEFORE creating, so the item appears with the correct name immediately.
-    // Respects the active destination (selected folder or currentPath).
-
-    func promptAndCreateFolder() {
-        let dest = activeDestination
-        let alert = NSAlert()
-        alert.messageText     = "New Folder in \"\(dest.lastPathComponent)\""
-        alert.informativeText = "Enter a name for the new folder:"
-        alert.addButton(withTitle: "Create")
-        alert.addButton(withTitle: "Cancel")
-        let tf = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
-        tf.stringValue = "New Folder"; tf.selectText(nil)
-        alert.accessoryView = tf; alert.window.initialFirstResponder = tf
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
-        let name = tf.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !name.isEmpty else { return }
-        folderService.createFolder(at: dest, name: name)
+    private func hiddenShortcut(_ key: KeyEquivalent,
+                                _ modifiers: EventModifiers,
+                                _ action: @escaping () -> Void) -> some View {
+        Button("") { action() }
+            .keyboardShortcut(key, modifiers: modifiers)
+            .hidden()
     }
 
-    func promptAndCreateFile() {
-        let dest = activeDestination
-        let alert = NSAlert()
-        alert.messageText     = "New File in \"\(dest.lastPathComponent)\""
-        alert.informativeText = "Enter a name for the new file (include extension, e.g. notes.txt):"
-        alert.addButton(withTitle: "Create")
-        alert.addButton(withTitle: "Cancel")
-        let tf = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
-        tf.stringValue = "untitled.txt"; tf.selectText(nil)
-        alert.accessoryView = tf; alert.window.initialFirstResponder = tf
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
-        let name = tf.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !name.isEmpty else { return }
-        folderService.createFile(at: dest, name: name)
+    // MARK: - Finder-style item creation (create first, then rename in place)
+
+    // Like Finder: the item appears immediately under its default name and
+    // enters in-place rename mode. Esc on a just-created item deletes it.
+    // `explicitParent` lets a column pane create in its own directory instead
+    // of the active destination.
+
+    func createNewFolderInline(in explicitParent: URL? = nil) {
+        let dest = explicitParent ?? activeDestination
+        guard let url = folderService.createFolder(at: dest, name: "New Folder", announce: false) else { return }
+        pendingInlineEdit = InlineEditTarget(kind: .newFolder, url: url)
+    }
+
+    func createNewFileInline(in explicitParent: URL? = nil) {
+        let dest = explicitParent ?? activeDestination
+        guard let url = folderService.createFile(at: dest, name: "untitled.txt", announce: false) else { return }
+        pendingInlineEdit = InlineEditTarget(kind: .newFile, url: url)
+    }
+
+    /// Finder: Return or F2 on a single selected item starts the in-place rename.
+    func startInlineRenameOfSelection() {
+        guard selectedIDs.count == 1,
+              let item = displayFiles.first(where: { selectedIDs.contains($0.id) }) else { return }
+        pendingInlineEdit = InlineEditTarget(kind: .rename, url: item.url)
     }
 
     // MARK: - Permanent delete with confirmation
@@ -400,7 +406,7 @@ struct ContentView: View {
             ListView(
                 files:            displayFiles,
                 selectedIDs:      $selectedIDs,
-                pendingRenameURL: $pendingRenameURL,
+                pendingInlineEdit: $pendingInlineEdit,
                 currentPath:      currentPath,
                 sortField:        sortFieldBinding,
                 sortAscending:    $sortAscending,
@@ -413,15 +419,16 @@ struct ContentView: View {
             )
         case .icons:
             IconsView(
-                files:       displayFiles,
-                selectedIDs: $selectedIDs,
-                currentPath: currentPath,
-                groupBy:     groupBy,
-                onNavigate:  navigateItem,
-                onBrowseInto: { currentPath = $0 },
-                onReload:    reload,
-                fileOps:     fileOps,
-                favorites:   favorites
+                files:            displayFiles,
+                selectedIDs:      $selectedIDs,
+                pendingInlineEdit: $pendingInlineEdit,
+                currentPath:      currentPath,
+                groupBy:          groupBy,
+                onNavigate:       navigateItem,
+                onBrowseInto:     { currentPath = $0 },
+                onReload:         reload,
+                fileOps:          fileOps,
+                favorites:        favorites
             )
         case .columns:
             ColumnsView(
@@ -432,6 +439,7 @@ struct ContentView: View {
                 sortField:      sortField,
                 sortAscending:  sortAscending,
                 folderOrder:    folderOrder,
+                pendingInlineEdit: $pendingInlineEdit,
                 fileOps:        fileOps,
                 favorites:      favorites,
                 searchResults:  displayFiles,

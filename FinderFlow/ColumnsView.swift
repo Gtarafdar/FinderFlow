@@ -15,6 +15,7 @@ struct ColumnsView: View {
     let sortField:      SortField
     let sortAscending:  Bool
     let folderOrder:    FolderOrder
+    @Binding var pendingInlineEdit: InlineEditTarget?
     @ObservedObject var fileOps:   FileOperationsService
     @ObservedObject var favorites: FavoritesService
     // Search support — when isSearchActive the column browser is replaced by a flat results list
@@ -145,6 +146,7 @@ struct ColumnsView: View {
             sortField:      sortField,
             sortAscending:  sortAscending,
             folderOrder:    folderOrder,
+            pendingInlineEdit: $pendingInlineEdit,
             onSelect: { selected in
                 if selected.isBrowsableFolder {
                     columns = Array(columns.prefix(idx + 1)) + [selected.url]
@@ -399,6 +401,7 @@ struct ColumnPane: View {
     let sortField:      SortField
     let sortAscending:  Bool
     let folderOrder:    FolderOrder
+    @Binding var pendingInlineEdit: InlineEditTarget?
     let onSelect:       (FileItem) -> Void
     let onBrowseInto:   (URL) -> Void
     let onOpen:         (URL) -> Void
@@ -408,6 +411,8 @@ struct ColumnPane: View {
     @State private var items: [FileItem] = []
     @State private var reloadGeneration: UInt = 0
     @State private var folderWatcher = FolderChangeWatcher()
+    @State private var renamingID: String?
+    @State private var editKind:   InlineEditKind = .rename
 
     private var groups: [FileGroup] { groupedItems(items, by: groupBy) }
 
@@ -431,11 +436,13 @@ struct ColumnPane: View {
             Button("Paste") { fileOps.paste(to: directory, reload: reload) }
                 .disabled(fileOps.pasteboardURLs.isEmpty)
             Divider()
+            // Creates in THIS pane's directory (the notification object carries
+            // it), then the pane's item goes straight into inline rename.
             Button("New Folder") {
-                NotificationCenter.default.post(name: .createNewFolder, object: nil)
+                NotificationCenter.default.post(name: .createNewFolder, object: directory)
             }
             Button("New File") {
-                NotificationCenter.default.post(name: .createNewFile, object: nil)
+                NotificationCenter.default.post(name: .createNewFile, object: directory)
             }
             if fileOps.canUndo { Button("Undo") { fileOps.undo() } }
             if fileOps.canRedo { Button("Redo") { fileOps.redo() } }
@@ -445,10 +452,18 @@ struct ColumnPane: View {
         .onAppear {
             reload()
             watchFolder()
+            applyPendingInlineEdit()
         }
         .onChange(of: directory) { _, _ in
             reload()
             watchFolder()
+        }
+        .onChange(of: pendingInlineEdit) { _, _ in applyPendingInlineEdit() }
+        .onChange(of: items) { _, newItems in
+            if let id = renamingID, !newItems.contains(where: { $0.id == id }) {
+                renamingID = nil
+            }
+            applyPendingInlineEdit()
         }
         .onChange(of: showHidden) { _, _ in reload() }
         .onChange(of: sortField)     { _, _ in reload() }
@@ -465,15 +480,39 @@ struct ColumnPane: View {
             Color.clear
                 .contentShape(Rectangle())
                 .onTapGesture(count: 2) {
+                    guard renamingID == nil else { return }
                     if item.isBrowsableFolder {
                         onSelect(item)
                     } else {
                         onOpen(item.url)
                     }
                 }
-                .onTapGesture { onSelect(item) }
-            ColumnRow(item: item, isHighlighted: highlightedURL == item.url)
-                .allowsHitTesting(false)
+                .onTapGesture {
+                    guard renamingID == nil else { return }
+                    onSelect(item)
+                }
+            if renamingID == item.id {
+                HStack(spacing: 6) {
+                    Image(nsImage: item.icon).resizable().frame(width: 16, height: 16)
+                        .allowsHitTesting(false)
+                    RenameField(
+                        initialValue:     item.name,
+                        initialSelection: inlineEditSelectionRange(for: item.name),
+                        font:             .systemFont(ofSize: 12),
+                        textColor:        .labelColor,
+                        onCommit:         { commitEdit($0, item: item) },
+                        onCancel:         { cancelEdit(item: item) }
+                    )
+                    Spacer()
+                }
+                .padding(.vertical, 2)
+                .padding(.horizontal, 4)
+                .background(Color.accentColor.opacity(0.25))
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+            } else {
+                ColumnRow(item: item, isHighlighted: highlightedURL == item.url)
+                    .allowsHitTesting(false)
+            }
         }
         .fileDragOut(item: item, files: items, selectedIDs: highlightedURL == item.url ? [item.id] : [])
         .contextMenu { columnContextMenu(item: item) }
@@ -499,7 +538,7 @@ struct ColumnPane: View {
         Button("Quick Look") { QuickLookController.shared.show([item.url]) }
         Button("Get Info")   { showGetInfo(item: item) }
         Divider()
-        Button("Rename…")    { promptRename(item: item) }
+        Button("Rename…")    { pendingInlineEdit = InlineEditTarget(kind: .rename, url: item.url) }
         Button("Duplicate")  { fileOps.duplicate([item.url], reload: reload) }
         Button("Make Alias") { fileOps.makeAlias(for: item.url, reload: reload) }
         Button("Compress \"\(item.name)\"") { fileOps.compress([item.url], reload: reload) }
@@ -581,19 +620,40 @@ struct ColumnPane: View {
         showGetInfoInFinder([item.url])
     }
 
-    private func promptRename(item: FileItem) {
-        let alert = NSAlert()
-        alert.messageText     = "Rename \"\(item.name)\""
-        alert.informativeText = "Enter a new name:"
-        alert.addButton(withTitle: "Rename")
-        alert.addButton(withTitle: "Cancel")
-        let tf = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
-        tf.stringValue = item.name; tf.selectText(nil)
-        alert.accessoryView = tf; alert.window.initialFirstResponder = tf
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
-        let name = tf.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !name.isEmpty, name != item.name else { return }
+    // MARK: - Inline edit (Finder-style)
+
+    /// Only the pane whose directory is the target's parent consumes the
+    /// pending edit; other panes see it but don't match.
+    private func applyPendingInlineEdit() {
+        guard let target = pendingInlineEdit,
+              target.url.deletingLastPathComponent() == directory,
+              let item = items.first(where: { $0.url == target.url }) else { return }
+        pendingInlineEdit = nil
+        editKind   = target.kind
+        renamingID = item.id
+    }
+
+    private func commitEdit(_ typed: String, item: FileItem) {
+        let kind = editKind
+        renamingID = nil
+        let name = committedRenameName(typed, original: item.name)
+        guard !name.isEmpty else {
+            if kind != .rename { removeJustCreated(item.url) }
+            return
+        }
+        guard name != item.name else { return }
         fileOps.rename(item.url, to: name, reload: reload)
+    }
+
+    private func cancelEdit(item: FileItem) {
+        let kind = editKind
+        renamingID = nil
+        if kind != .rename { removeJustCreated(item.url) }
+    }
+
+    private func removeJustCreated(_ url: URL) {
+        try? FileManager.default.removeItem(at: url)
+        reload()
     }
 }
 

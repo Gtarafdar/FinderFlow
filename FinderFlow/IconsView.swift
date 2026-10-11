@@ -3,6 +3,7 @@ import SwiftUI
 struct IconsView: View {
     let files:       [FileItem]
     @Binding var selectedIDs: Set<String>
+    @Binding var pendingInlineEdit: InlineEditTarget?
     let currentPath: URL
     let groupBy:     GroupBy
     let onNavigate:  (FileItem) -> Void
@@ -12,6 +13,8 @@ struct IconsView: View {
     @ObservedObject var favorites: FavoritesService
 
     @State private var iconSize: CGFloat = 64
+    @State private var renamingID: String?
+    @State private var editKind:   InlineEditKind = .rename
 
     private var columns: [GridItem] {
         [GridItem(.adaptive(minimum: iconSize + 20, maximum: iconSize + 40), spacing: 8)]
@@ -30,10 +33,35 @@ struct IconsView: View {
                                     ZStack {
                                         Color.clear
                                             .contentShape(Rectangle())
-                                            .onTapGesture(count: 2) { onNavigate(item) }
-                                            .onTapGesture { selectedIDs = [item.id] }
-                                        IconCell(item: item, iconSize: iconSize, isSelected: selectedIDs.contains(item.id))
-                                            .allowsHitTesting(false)
+                                            .onTapGesture(count: 2) {
+                                                guard renamingID == nil else { return }
+                                                onNavigate(item)
+                                            }
+                                            .onTapGesture {
+                                                guard renamingID == nil else { return }
+                                                selectedIDs = [item.id]
+                                            }
+                                        if renamingID == item.id {
+                                            IconCell(item: item, iconSize: iconSize,
+                                                      isSelected: selectedIDs.contains(item.id),
+                                                      hidesName: true)
+                                                .overlay(alignment: .bottom) {
+                                                    RenameField(
+                                                        initialValue:     item.name,
+                                                        initialSelection: inlineEditSelectionRange(for: item.name),
+                                                        font:             .systemFont(ofSize: 11),
+                                                        textColor:        selectedIDs.contains(item.id) ? .white : .labelColor,
+                                                        onCommit:         { commitEdit($0, item: item) },
+                                                        onCancel:         { cancelEdit(item: item) }
+                                                    )
+                                                    .frame(maxWidth: .infinity)
+                                                    .padding(.horizontal, 4)
+                                                    .padding(.bottom, 6)
+                                                }
+                                        } else {
+                                            IconCell(item: item, iconSize: iconSize, isSelected: selectedIDs.contains(item.id))
+                                                .allowsHitTesting(false)
+                                        }
                                     }
                                     .fileDragOut(item: item, files: files, selectedIDs: selectedIDs)
                                     .contextMenu { iconContextMenu(item: item) }
@@ -52,6 +80,14 @@ struct IconsView: View {
             }
             .background(Color(nsColor: .textBackgroundColor))
             .contextMenu { FolderBackgroundMenu() }
+            .onAppear { applyPendingInlineEdit(files) }
+            .onChange(of: pendingInlineEdit) { _, _ in applyPendingInlineEdit(files) }
+            .onChange(of: files) { _, newFiles in
+                if let id = renamingID, !newFiles.contains(where: { $0.id == id }) {
+                    renamingID = nil
+                }
+                applyPendingInlineEdit(newFiles)
+            }
             .background(
                 Button("") { quickLook() }
                     .keyboardShortcut(.space, modifiers: [])
@@ -85,7 +121,7 @@ struct IconsView: View {
         Button("Quick Look") { QuickLookController.shared.show(urls) }
         Button("Get Info")   { showGetInfo(for: targets) }
         Divider()
-        Button("Rename…")  { promptRename(item: item) }
+        Button("Rename…")  { pendingInlineEdit = InlineEditTarget(kind: .rename, url: item.url) }
         Button(targets.count > 1 ? "Duplicate \(targets.count) Items" : "Duplicate") {
             fileOps.duplicate(urls, reload: onReload)
         }
@@ -147,20 +183,41 @@ struct IconsView: View {
         QuickLookController.shared.show(urls)
     }
 
-    private func promptRename(item: FileItem) {
-        let alert = NSAlert()
-        alert.messageText     = "Rename \"\(item.name)\""
-        alert.informativeText = "Enter a new name:"
-        alert.addButton(withTitle: "Rename")
-        alert.addButton(withTitle: "Cancel")
-        let tf = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
-        tf.stringValue = item.name; tf.selectText(nil)
-        alert.accessoryView = tf
-        alert.window.initialFirstResponder = tf
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
-        let name = tf.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !name.isEmpty, name != item.name else { return }
+    // MARK: - Inline edit (Finder-style)
+
+    private func startEdit(item: FileItem, kind: InlineEditKind) {
+        editKind   = kind
+        renamingID = item.id
+    }
+
+    private func applyPendingInlineEdit(_ newFiles: [FileItem]) {
+        guard let target = pendingInlineEdit,
+              let item = newFiles.first(where: { $0.url == target.url }) else { return }
+        pendingInlineEdit = nil
+        startEdit(item: item, kind: target.kind)
+    }
+
+    private func commitEdit(_ typed: String, item: FileItem) {
+        let kind = editKind
+        renamingID = nil
+        let name = committedRenameName(typed, original: item.name)
+        guard !name.isEmpty else {
+            if kind != .rename { removeJustCreated(item.url) }
+            return
+        }
+        guard name != item.name else { return }
         fileOps.rename(item.url, to: name, reload: onReload)
+    }
+
+    private func cancelEdit(item: FileItem) {
+        let kind = editKind
+        renamingID = nil
+        if kind != .rename { removeJustCreated(item.url) }
+    }
+
+    private func removeJustCreated(_ url: URL) {
+        try? FileManager.default.removeItem(at: url)
+        onReload()
     }
 
     private func showGetInfo(for items: [FileItem]) {
@@ -170,6 +227,10 @@ struct IconsView: View {
 
 struct IconCell: View {
     let item: FileItem; let iconSize: CGFloat; let isSelected: Bool
+    /// When true the name row is left empty — an inline rename field is
+    /// overlaid there instead (the cell keeps its size so the grid doesn't jump).
+    var hidesName: Bool = false
+
     var body: some View {
         VStack(spacing: 4) {
             ZStack(alignment: .bottomTrailing) {
@@ -182,9 +243,13 @@ struct IconCell: View {
                         .allowsHitTesting(false)
                 }
             }
-            Text(item.name).font(.caption).lineLimit(2).multilineTextAlignment(.center)
-                .foregroundStyle(isSelected ? .white : .primary)
-                .allowsHitTesting(false)
+            if hidesName {
+                Color.clear.frame(height: 14)
+            } else {
+                Text(item.name).font(.caption).lineLimit(2).multilineTextAlignment(.center)
+                    .foregroundStyle(isSelected ? .white : .primary)
+                    .allowsHitTesting(false)
+            }
         }
         .padding(6).frame(maxWidth: .infinity)
         .background(isSelected ? Color.accentColor : Color.clear)

@@ -9,7 +9,7 @@ private let kTableHeaderStripHeight: CGFloat = 30
 struct ListView: View {
     let files:         [FileItem]
     @Binding var selectedIDs:      Set<String>
-    @Binding var pendingRenameURL: URL?
+    @Binding var pendingInlineEdit: InlineEditTarget?
     let currentPath:   URL
     @Binding var sortField:     SortField
     @Binding var sortAscending: Bool
@@ -22,16 +22,14 @@ struct ListView: View {
 
     @State private var sortOrder:       [KeyPathComparator<FileItem>] = [.init(\.name, order: .forward)]
     @State private var renamingID:      String?
-    @State private var renameText:      String = ""
-    @State private var renameCancelled: Bool   = false
-    @FocusState private var renameActive: Bool
+    @State private var editKind:        InlineEditKind = .rename
 
     var body: some View {
         if groupBy != .none {
             GroupedListView(
                 files:            files,
                 selectedIDs:      $selectedIDs,
-                pendingRenameURL: $pendingRenameURL,
+                pendingInlineEdit: $pendingInlineEdit,
                 currentPath:      currentPath,
                 groupBy:          groupBy,
                 onNavigate:       onNavigate,
@@ -42,11 +40,8 @@ struct ListView: View {
             )
         } else {
             tableView
-                .onChange(of: pendingRenameURL) { _, url in
-                    guard let url, let item = files.first(where: { $0.url == url }) else { return }
-                    startRename(item: item)
-                    pendingRenameURL = nil
-                }
+                .onAppear      { applyPendingInlineEdit(files) }
+                .onChange(of: pendingInlineEdit) { _, _ in applyPendingInlineEdit(files) }
         }
     }
 
@@ -59,16 +54,15 @@ struct ListView: View {
                     Image(nsImage: item.icon).resizable().frame(width: 16, height: 16)
                         .allowsHitTesting(false)
                     if renamingID == item.id {
-                        TextField("", text: $renameText)
-                            .textFieldStyle(.plain)
-                            .resetsCursorOnExit()
-                            .focused($renameActive)
-                            .onSubmit {
-                                if let it = files.first(where: { $0.id == renamingID }) {
-                                    commitRename(for: it)
-                                }
-                            }
-                            .onExitCommand { cancelRename() }
+                        RenameField(
+                            initialValue:     item.name,
+                            initialSelection: inlineEditSelectionRange(for: item.name),
+                            font:             .systemFont(ofSize: 13),
+                            textColor:        .labelColor,
+                            onCommit:         { commitEdit($0, item: item) },
+                            onCancel:         { cancelEdit(item: item) }
+                        )
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     } else {
                         Text(item.name).lineLimit(1)
                             .foregroundStyle(fileOps.isCut && fileOps.clipboardURLs.contains(item.url)
@@ -124,11 +118,7 @@ struct ListView: View {
             if let id = renamingID, !newFiles.contains(where: { $0.id == id }) {
                 renamingID = nil
             }
-        }
-        .onChange(of: renameActive)  { _, active in
-            guard !active, let id = renamingID,
-                  let item = files.first(where: { $0.id == id }) else { return }
-            commitRename(for: item)
+            applyPendingInlineEdit(newFiles)
         }
         .onAppear { syncSortOrder() }
         .contextMenu(forSelectionType: String.self) { ids in
@@ -176,27 +166,46 @@ struct ListView: View {
         }
     }
 
-    // MARK: - Inline rename helpers
+    // MARK: - Inline edit (Finder-style)
 
-    func startRename(item: FileItem) {
-        renameCancelled = false
-        renamingID      = item.id
-        renameText      = item.name
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { renameActive = true }
+    func startEdit(item: FileItem, kind: InlineEditKind) {
+        editKind   = kind
+        renamingID = item.id
     }
 
-    private func commitRename(for item: FileItem) {
-        renamingID   = nil
-        renameActive = false
-        guard !renameCancelled else { renameCancelled = false; return }
-        let name = renameText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !name.isEmpty, name != item.name else { return }
+    /// Consume a pending inline-edit request once its item is listed.
+    /// The item may not be loaded yet when the request arrives (a creation
+    /// reloads the folder in the background), so this also runs on each
+    /// files update.
+    func applyPendingInlineEdit(_ newFiles: [FileItem]) {
+        guard let target = pendingInlineEdit,
+              let item = newFiles.first(where: { $0.url == target.url }) else { return }
+        pendingInlineEdit = nil
+        startEdit(item: item, kind: target.kind)
+    }
+
+    private func commitEdit(_ typed: String, item: FileItem) {
+        let kind = editKind
+        renamingID = nil
+        let name = committedRenameName(typed, original: item.name)
+        guard !name.isEmpty else {
+            if kind != .rename { removeJustCreated(item.url) }
+            return
+        }
+        guard name != item.name else { return }
         fileOps.rename(item.url, to: name, reload: onReload)
     }
 
-    private func cancelRename() {
-        renameCancelled = true
-        renamingID      = nil
+    private func cancelEdit(item: FileItem) {
+        let kind = editKind
+        renamingID = nil
+        if kind != .rename { removeJustCreated(item.url) }
+    }
+
+    /// Cancelling the name of a just-created item deletes it (Finder behavior).
+    private func removeJustCreated(_ url: URL) {
+        try? FileManager.default.removeItem(at: url)
+        onReload()
     }
 
     // MARK: - Full macOS context menu
@@ -217,7 +226,7 @@ struct ListView: View {
             Button("Quick Look")         { quickLook(ids: ids) }
             Button("Get Info")           { showGetInfo(for: sel) }
             Divider()
-            Button("Rename…")            { pendingRenameURL = item.url }
+            Button("Rename…")            { pendingInlineEdit = InlineEditTarget(kind: .rename, url: item.url) }
             Button(sel.count > 1 ? "Duplicate \(sel.count) Items" : "Duplicate") {
                 fileOps.duplicate(urls, reload: onReload)
             }
@@ -299,7 +308,7 @@ struct ListView: View {
 struct GroupedListView: View {
     let files:       [FileItem]
     @Binding var selectedIDs:      Set<String>
-    @Binding var pendingRenameURL: URL?
+    @Binding var pendingInlineEdit: InlineEditTarget?
     let currentPath: URL
     let groupBy:     GroupBy
     let onNavigate:  (FileItem) -> Void
@@ -308,10 +317,8 @@ struct GroupedListView: View {
     @ObservedObject var fileOps:   FileOperationsService
     @ObservedObject var favorites: FavoritesService
 
-    @State private var renamingID:      String?
-    @State private var renameText:      String = ""
-    @State private var renameCancelled: Bool   = false
-    @FocusState private var renameActive: Bool
+    @State private var renamingID: String?
+    @State private var editKind:   InlineEditKind = .rename
 
     private var groups: [FileGroup] { groupedItems(files, by: groupBy) }
 
@@ -341,16 +348,14 @@ struct GroupedListView: View {
                             if renamingID == item.id {
                                 HStack(spacing: 8) {
                                     Image(nsImage: item.icon).resizable().frame(width: 18, height: 18)
-                                    TextField("", text: $renameText)
-                                        .textFieldStyle(.plain)
-                                        .resetsCursorOnExit()
-                                        .focused($renameActive)
-                                        .onSubmit {
-                                            if let it = files.first(where: { $0.id == renamingID }) {
-                                                commitGroupedRename(for: it)
-                                            }
-                                        }
-                                        .onExitCommand { cancelGroupedRename() }
+                                    RenameField(
+                                        initialValue:     item.name,
+                                        initialSelection: inlineEditSelectionRange(for: item.name),
+                                        font:             .systemFont(ofSize: 13),
+                                        textColor:        .labelColor,
+                                        onCommit:         { commitEdit($0, item: item) },
+                                        onCancel:         { cancelEdit(item: item) }
+                                    )
                                     Spacer()
                                 }
                                 .padding(.vertical, 2)
@@ -386,16 +391,8 @@ struct GroupedListView: View {
                 renamingID = nil
             }
         }
-        .onChange(of: renameActive) { _, active in
-            guard !active, let id = renamingID,
-                  let item = files.first(where: { $0.id == id }) else { return }
-            commitGroupedRename(for: item)
-        }
-        .onChange(of: pendingRenameURL) { _, url in
-            guard let url, let item = files.first(where: { $0.url == url }) else { return }
-            startGroupedRename(item: item)
-            pendingRenameURL = nil
-        }
+        .onAppear { applyPendingInlineEdit(files) }
+        .onChange(of: pendingInlineEdit) { _, _ in applyPendingInlineEdit(files) }
         .background(
             Button("") {
                 let urls = files.filter { selectedIDs.contains($0.id) }.map(\.url)
@@ -406,27 +403,41 @@ struct GroupedListView: View {
         } // ScrollViewReader
     }
 
-    // MARK: - Grouped inline rename helpers
+    // MARK: - Inline edit (Finder-style)
 
-    func startGroupedRename(item: FileItem) {
-        renameCancelled = false
-        renamingID      = item.id
-        renameText      = item.name
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { renameActive = true }
+    private func startEdit(item: FileItem, kind: InlineEditKind) {
+        editKind   = kind
+        renamingID = item.id
     }
 
-    private func commitGroupedRename(for item: FileItem) {
-        renamingID   = nil
-        renameActive = false
-        guard !renameCancelled else { renameCancelled = false; return }
-        let name = renameText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !name.isEmpty, name != item.name else { return }
+    private func applyPendingInlineEdit(_ newFiles: [FileItem]) {
+        guard let target = pendingInlineEdit,
+              let item = newFiles.first(where: { $0.url == target.url }) else { return }
+        pendingInlineEdit = nil
+        startEdit(item: item, kind: target.kind)
+    }
+
+    private func commitEdit(_ typed: String, item: FileItem) {
+        let kind = editKind
+        renamingID = nil
+        let name = committedRenameName(typed, original: item.name)
+        guard !name.isEmpty else {
+            if kind != .rename { removeJustCreated(item.url) }
+            return
+        }
+        guard name != item.name else { return }
         fileOps.rename(item.url, to: name, reload: onReload)
     }
 
-    private func cancelGroupedRename() {
-        renameCancelled = true
-        renamingID      = nil
+    private func cancelEdit(item: FileItem) {
+        let kind = editKind
+        renamingID = nil
+        if kind != .rename { removeJustCreated(item.url) }
+    }
+
+    private func removeJustCreated(_ url: URL) {
+        try? FileManager.default.removeItem(at: url)
+        onReload()
     }
 
     @ViewBuilder
@@ -444,7 +455,7 @@ struct GroupedListView: View {
         Button("Quick Look") { QuickLookController.shared.show(urls) }
         Button("Get Info")   { showGetInfoInFinder([item.url]) }
         Divider()
-        Button("Rename…")   { pendingRenameURL = item.url }
+        Button("Rename…")   { pendingInlineEdit = InlineEditTarget(kind: .rename, url: item.url) }
         Button("Duplicate") { fileOps.duplicate(urls, reload: onReload) }
         Button(targets.count > 1 ? "Make \(targets.count) Aliases" : "Make Alias") {
             urls.forEach { fileOps.makeAlias(for: $0, reload: onReload) }

@@ -37,6 +37,9 @@
 		DDDDDDDDDDDDDDDDDDDD0002 /* AceEditor in Resources */ = {isa = PBXBuildFile; fileRef = DDDDDDDDDDDDDDDDDDDD0001 /* AceEditor */; };
 		SSSSSSSSSSSSSSSSSSSS0002 /* ArchiveSecurity.swift in Sources */ = {isa = PBXBuildFile; fileRef = SSSSSSSSSSSSSSSSSSSS0001 /* ArchiveSecurity.swift */; };
 		SSSSSSSSSSSSSSSSSSSS0003 /* ArchiveSecurity.swift in Sources */ = {isa = PBXBuildFile; fileRef = SSSSSSSSSSSSSSSSSSSS0001 /* ArchiveSecurity.swift */; };
+		UUUUUUUUUUUUUUUUUUUU0002 /* InlineRename.swift in Sources */ = {isa = PBXBuildFile; fileRef = UUUUUUUUUUUUUUUUUUUU0001 /* InlineRename.swift */; };
+		UUUUUUUUUUUUUUUUUUUU0003 /* InlineRename.swift in Sources */ = {isa = PBXBuildFile; fileRef = UUUUUUUUUUUUUUUUUUUU0001 /* InlineRename.swift */; };
+		VVVVVVVVVVVVVVVVVVVV0002 /* RenameNameTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = VVVVVVVVVVVVVVVVVVVV0001 /* RenameNameTests.swift */; };
 		TTTTTTTTTTTTTTTTTTTT0003 /* ArchiveSecurityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TTTTTTTTTTTTTTTTTTTT0002 /* ArchiveSecurityTests.swift */; };
 		EEEEEEEEEEEEEEEEEEEF0003 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = EEEEEEEEEEEEEEEEEEEF0002 /* Sparkle */; };
 /* End PBXBuildFile section */
@@ -99,6 +102,8 @@
 		FFFFFFFFFFFFFFFF0009 /* MarkdownEditorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownEditorController.swift; sourceTree = "<group>"; };
 		FFFFFFFFFFFFFFFF000B /* FirstRunSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunSheet.swift; sourceTree = "<group>"; };
 		SSSSSSSSSSSSSSSSSSSS0001 /* ArchiveSecurity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveSecurity.swift; sourceTree = "<group>"; };
+		UUUUUUUUUUUUUUUUUUUU0001 /* InlineRename.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineRename.swift; sourceTree = "<group>"; };
+		VVVVVVVVVVVVVVVVVVVV0001 /* RenameNameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameNameTests.swift; sourceTree = "<group>"; };
 		TTTTTTTTTTTTTTTTTTTT0001 /* FinderFlowTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FinderFlowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		TTTTTTTTTTTTTTTTTTTT0002 /* ArchiveSecurityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveSecurityTests.swift; sourceTree = "<group>"; };
 		DDDDDDDDDDDDDDDDDDDD0001 /* AceEditor */ = {isa = PBXFileReference; lastKnownFileType = folder; path = AceEditor; sourceTree = "<group>"; };
@@ -182,6 +187,7 @@
 				FFFFFFFFFFFFFFFF0009 /* MarkdownEditorController.swift */,
 				FFFFFFFFFFFFFFFF000B /* FirstRunSheet.swift */,
 				SSSSSSSSSSSSSSSSSSSS0001 /* ArchiveSecurity.swift */,
+				UUUUUUUUUUUUUUUUUUUU0001 /* InlineRename.swift */,
 				DDDDDDDDDDDDDDDDDDDD0001 /* AceEditor */,
 			);
 			path = FinderFlow;
@@ -209,6 +215,7 @@
 			isa = PBXGroup;
 			children = (
 				TTTTTTTTTTTTTTTTTTTT0002 /* ArchiveSecurityTests.swift */,
+				VVVVVVVVVVVVVVVVVVVV0001 /* RenameNameTests.swift */,
 			);
 			path = FinderFlowTests;
 			sourceTree = "<group>";
@@ -368,6 +375,7 @@
 				FFFFFFFFFFFFFFFF000A /* MarkdownEditorController.swift in Sources */,
 				FFFFFFFFFFFFFFFF000C /* FirstRunSheet.swift in Sources */,
 				SSSSSSSSSSSSSSSSSSSS0002 /* ArchiveSecurity.swift in Sources */,
+				UUUUUUUUUUUUUUUUUUUU0002 /* InlineRename.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -376,7 +384,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				TTTTTTTTTTTTTTTTTTTT0003 /* ArchiveSecurityTests.swift in Sources */,
+				VVVVVVVVVVVVVVVVVVVV0002 /* RenameNameTests.swift in Sources */,
 				SSSSSSSSSSSSSSSSSSSS0003 /* ArchiveSecurity.swift in Sources */,
+				UUUUUUUUUUUUUUUUUUUU0003 /* InlineRename.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

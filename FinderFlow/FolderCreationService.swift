@@ -61,37 +61,50 @@ class FolderCreationService: ObservableObject {
     @Published var errorMessage:       String?
     @Published var lastActionFeedback: ActionFeedback?
 
-    func createFolder(at path: URL, name: String = "New Folder") {
+    /// Creates the folder and returns its final (uniquified) URL synchronously
+    /// so the caller can immediately put it into Finder-style inline rename.
+    /// `announce` is false when the item goes straight into rename mode — the
+    /// commit will toast, so a second "Created" toast would just flash.
+    @discardableResult
+    func createFolder(at path: URL, name: String = "New Folder", announce: Bool = true) -> URL? {
         let target = uniqueURL(for: path.appendingPathComponent(name))
         do {
             try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
             DispatchQueue.main.async {
-                self.lastActionFeedback = ActionFeedback(
-                    icon: "folder.badge.plus",
-                    message: "Created \"\(target.lastPathComponent)\""
-                )
+                if announce {
+                    self.lastActionFeedback = ActionFeedback(
+                        icon: "folder.badge.plus",
+                        message: "Created \"\(target.lastPathComponent)\""
+                    )
+                }
                 self.lastCreatedURL = target
             }
+            return target
         } catch {
             DispatchQueue.main.async { self.errorMessage = error.localizedDescription }
+            return nil
         }
     }
 
-    func createFile(at path: URL, name: String = "untitled.txt") {
+    @discardableResult
+    func createFile(at path: URL, name: String = "untitled.txt", announce: Bool = true) -> URL? {
         let target = uniqueURL(for: path.appendingPathComponent(name))
         guard FileManager.default.createFile(atPath: target.path, contents: nil) else {
             DispatchQueue.main.async {
                 self.errorMessage = "Could not create file at \(target.path)"
             }
-            return
+            return nil
         }
         DispatchQueue.main.async {
-            self.lastActionFeedback = ActionFeedback(
-                icon: "doc.badge.plus",
-                message: "Created \"\(target.lastPathComponent)\""
-            )
+            if announce {
+                self.lastActionFeedback = ActionFeedback(
+                    icon: "doc.badge.plus",
+                    message: "Created \"\(target.lastPathComponent)\""
+                )
+            }
             self.lastCreatedURL = target
         }
+        return target
     }
 
     func uniqueURL(for base: URL) -> URL {
