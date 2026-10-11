@@ -84,7 +84,7 @@ struct QuickActionsToolbar: View {
             }
 
             if let icon = apps.claude {
-                AppIconToolbarButton(appIcon: icon, label: "Open in Claude Code (opens Terminal)") {
+                AppIconToolbarButton(appIcon: icon, label: "Open in Claude Code (new terminal window)") {
                     openInClaudeCode(openTarget)
                 }
             }
@@ -388,14 +388,7 @@ struct QuickActionsToolbar: View {
     // MARK: - Open helpers
 
     private func openInTerminal(_ url: URL) {
-        let cmd = "cd \(shellQuoted(url.path))"
-        let script = """
-tell application "Terminal"
-    activate
-    do script \(appleScriptStringLiteral(cmd))
-end tell
-"""
-        runAppleScript(script)
+        TerminalLauncher.openTerminal(workingDirectory: url)
     }
 
     private func openInVSCode(_ url: URL) {
@@ -411,21 +404,13 @@ end tell
     }
 
     private func openInClaudeCode(_ url: URL) {
-        // Claude Code is a TUI — open a NEW Terminal window (which launches a
-        // login shell, so PATH is fully configured including nvm / homebrew / npm).
-        // Use the detected full CLI path when available, otherwise fall back to
-        // the bare `claude` command which the login shell will resolve via PATH.
-        let safe    = shellQuoted(url.path)
-        let cliSafe = apps.claudeCLI.map { shellQuoted($0) } ?? "claude"
-        // `do script` without "in front window" always opens a new window/tab.
-        let cmd = "cd \(safe) && \(cliSafe) ."
-        let script  = """
-tell application "Terminal"
-    activate
-    do script \(appleScriptStringLiteral(cmd))
-end tell
-"""
-        runAppleScript(script)
+        // Claude Code is a TUI — open a terminal session (login shell, so PATH
+        // is fully configured including nvm / homebrew / npm) and run `claude`.
+        // Use the detected full CLI path when available, otherwise the bare
+        // `claude` command which the login shell resolves via PATH.
+        let cliSafe = apps.claudeCLI.map { TerminalLauncher.shellQuoted($0) } ?? "claude"
+        let command = "cd \(TerminalLauncher.shellQuoted(url.path)) && \(cliSafe) ."
+        runTUI(command, in: url, hint: "Run `claude .` in the opened terminal")
     }
 
     private func openInCursor(_ url: URL) {
@@ -462,35 +447,24 @@ end tell
             )
             return
         }
-        // CLI (TUI) fallback — open in Terminal
+        // CLI (TUI) fallback
         let cliCandidates = ["/usr/local/bin/codex", "/opt/homebrew/bin/codex"]
         if let cli = cliCandidates.first(where: { FileManager.default.fileExists(atPath: $0) }) {
-            let safe    = shellQuoted(url.path)
-            let cliSafe = shellQuoted(cli)
-            let cmd = "cd \(safe) && \(cliSafe)"
-            let script  = """
-tell application "Terminal"
-    activate
-    do script \(appleScriptStringLiteral(cmd))
-end tell
-"""
-            runAppleScript(script)
+            let command = "cd \(TerminalLauncher.shellQuoted(url.path)) && \(TerminalLauncher.shellQuoted(cli))"
+            runTUI(command, in: url, hint: "Run `codex` in the opened terminal")
         }
     }
 
-    // MARK: - Shared helpers
-
-    /// Single-quote a path for shell embedding — safe against $, `, !, spaces, etc.
-    private func shellQuoted(_ path: String) -> String {
-        "'" + path.replacingOccurrences(of: "'", with: "'\\''") + "'"
+    /// Run a TUI command in the user's configured terminal. Terminals that
+    /// can't take commands through AppleScript (Alacritty, kitty, a custom app)
+    /// get a plain window at the folder instead, plus a toast with the command.
+    private func runTUI(_ command: String, in url: URL, hint: String) {
+        if TerminalLauncher.runCommand(command) { return }
+        TerminalLauncher.openTerminal(workingDirectory: url)
+        fileOps.lastActionFeedback = ActionFeedback(icon: "terminal", message: hint)
     }
 
-    private func runAppleScript(_ source: String) {
-        let p = Process()
-        p.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        p.arguments = ["-e", source]
-        try? p.run()
-    }
+    // MARK: - Shared helpers (launching lives in TerminalLauncher)
 }
 
 // MARK: - Toolbar button with SF Symbol icon

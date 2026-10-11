@@ -37,6 +37,7 @@
 		DDDDDDDDDDDDDDDDDDDD0002 /* AceEditor in Resources */ = {isa = PBXBuildFile; fileRef = DDDDDDDDDDDDDDDDDDDD0001 /* AceEditor */; };
 		SSSSSSSSSSSSSSSSSSSS0002 /* ArchiveSecurity.swift in Sources */ = {isa = PBXBuildFile; fileRef = SSSSSSSSSSSSSSSSSSSS0001 /* ArchiveSecurity.swift */; };
 		SSSSSSSSSSSSSSSSSSSS0003 /* ArchiveSecurity.swift in Sources */ = {isa = PBXBuildFile; fileRef = SSSSSSSSSSSSSSSSSSSS0001 /* ArchiveSecurity.swift */; };
+		WWWWWWWWWWWWWWWWWWWWWW0002 /* TerminalApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = WWWWWWWWWWWWWWWWWWWWWW0001 /* TerminalApp.swift */; };
 		TTTTTTTTTTTTTTTTTTTT0003 /* ArchiveSecurityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TTTTTTTTTTTTTTTTTTTT0002 /* ArchiveSecurityTests.swift */; };
 		EEEEEEEEEEEEEEEEEEEF0003 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = EEEEEEEEEEEEEEEEEEEF0002 /* Sparkle */; };
 /* End PBXBuildFile section */
@@ -99,6 +100,7 @@
 		FFFFFFFFFFFFFFFF0009 /* MarkdownEditorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownEditorController.swift; sourceTree = "<group>"; };
 		FFFFFFFFFFFFFFFF000B /* FirstRunSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunSheet.swift; sourceTree = "<group>"; };
 		SSSSSSSSSSSSSSSSSSSS0001 /* ArchiveSecurity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveSecurity.swift; sourceTree = "<group>"; };
+		WWWWWWWWWWWWWWWWWWWWWW0001 /* TerminalApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalApp.swift; sourceTree = "<group>"; };
 		TTTTTTTTTTTTTTTTTTTT0001 /* FinderFlowTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FinderFlowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		TTTTTTTTTTTTTTTTTTTT0002 /* ArchiveSecurityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveSecurityTests.swift; sourceTree = "<group>"; };
 		DDDDDDDDDDDDDDDDDDDD0001 /* AceEditor */ = {isa = PBXFileReference; lastKnownFileType = folder; path = AceEditor; sourceTree = "<group>"; };
@@ -182,6 +184,7 @@
 				FFFFFFFFFFFFFFFF0009 /* MarkdownEditorController.swift */,
 				FFFFFFFFFFFFFFFF000B /* FirstRunSheet.swift */,
 				SSSSSSSSSSSSSSSSSSSS0001 /* ArchiveSecurity.swift */,
+				WWWWWWWWWWWWWWWWWWWWWW0001 /* TerminalApp.swift */,
 				DDDDDDDDDDDDDDDDDDDD0001 /* AceEditor */,
 			);
 			path = FinderFlow;
@@ -368,6 +371,7 @@
 				FFFFFFFFFFFFFFFF000A /* MarkdownEditorController.swift in Sources */,
 				FFFFFFFFFFFFFFFF000C /* FirstRunSheet.swift in Sources */,
 				SSSSSSSSSSSSSSSSSSSS0002 /* ArchiveSecurity.swift in Sources */,
+				WWWWWWWWWWWWWWWWWWWWWW0002 /* TerminalApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

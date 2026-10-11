@@ -68,6 +68,7 @@ struct SettingsView: View {
     @State private var working = false
     @State private var statusMessage: String?
     @AppStorage("ffEditorSniffUnknown") private var sniffUnknown = true
+    @AppStorage(TerminalChoice.choiceKey) private var terminalChoiceRaw = TerminalChoice.terminal.rawValue
     @AppStorage(UserPreferences.viewModeKey)       private var viewModeRaw    = UserPreferences.defaultViewMode.rawValue
     @AppStorage(UserPreferences.sortFieldKey)      private var sortFieldRaw   = UserPreferences.defaultSortField.rawValue
     @AppStorage(UserPreferences.sortAscendingKey)  private var sortAscending  = UserPreferences.defaultSortAscending
@@ -108,6 +109,34 @@ struct SettingsView: View {
                     groupByRaw     = UserPreferences.defaultGroupBy.rawValue
                     folderOrderRaw = UserPreferences.defaultFolderOrder.rawValue
                 }
+            }
+
+            Section("Terminal") {
+                Picker("Open Terminal with", selection: $terminalChoiceRaw) {
+                    ForEach(TerminalChoice.allCases) { c in
+                        Text(c.displayName).tag(c.rawValue)
+                    }
+                }
+                .pickerStyle(.radioGroup)
+
+                if terminalChoiceRaw == TerminalChoice.custom.rawValue {
+                    HStack(spacing: 8) {
+                        Text(TerminalChoice.customAppPath.map {
+                            URL(fileURLWithPath: $0).deletingPathExtension().lastPathComponent
+                        } ?? "No app chosen")
+                            .foregroundStyle(.secondary)
+                        Button("Choose…") { TerminalChoice.chooseCustomApp() }
+                    }
+                    Text("FinderFlow passes the folder to the app as an argument; terminal-like apps that accept a path will start there.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Text("Claude Code and Codex run in Terminal or iTerm2 — only those accept commands through AppleScript. With any other terminal, they open a new window and tell you what to run.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             Section("Text editor") {
