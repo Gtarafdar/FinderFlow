@@ -47,6 +47,7 @@ class FavoritesService: ObservableObject {
 // MARK: - Sidebar view
 
 struct SidebarView: View {
+    @EnvironmentObject private var locale: LocaleState
     @Binding var currentPath:     URL
     @Binding var selection:       SidebarItem?
     @Binding var activeTagFilter: String?
@@ -58,7 +59,7 @@ struct SidebarView: View {
         List(selection: $selection) {
 
             // ── System locations ──────────────────────────────────────────
-            Section("Favorites") {
+            Section(L10n.s("Favorites")) {
                 ForEach(systemLocations, id: \.self) { url in
                     SidebarRow(url: url)
                         .tag(SidebarItem.location(url))
@@ -67,12 +68,12 @@ struct SidebarView: View {
 
             // ── User-pinned folders ───────────────────────────────────────
             if !favorites.pinnedURLs.isEmpty {
-                Section("Pinned") {
+                Section(L10n.s("Pinned")) {
                     ForEach(favorites.pinnedURLs, id: \.self) { url in
                         SidebarRow(url: url)
                             .tag(SidebarItem.pinned(url))
                             .contextMenu {
-                                Button("Remove from Pinned") { favorites.unpin(url) }
+                                Button(L10n.s("Remove from Pinned")) { favorites.unpin(url) }
                             }
                     }
                     .onDelete { idx in
@@ -83,7 +84,7 @@ struct SidebarView: View {
 
             // ── Recent ────────────────────────────────────────────────────
             if !recentFolders.isEmpty {
-                Section("Recent") {
+                Section(L10n.s("Recent")) {
                     ForEach(recentFolders.prefix(8), id: \.self) { url in
                         SidebarRow(url: url)
                             .tag(SidebarItem.recent(url))
@@ -93,7 +94,7 @@ struct SidebarView: View {
 
             // ── Tags (only when files in current folder are tagged) ────────
             if !usedTagNames.isEmpty {
-                Section("Tags") {
+                Section(L10n.s("Tags")) {
                     ForEach(usedTagNames, id: \.self) { tag in
                         tagRow(tag: tag)
                     }

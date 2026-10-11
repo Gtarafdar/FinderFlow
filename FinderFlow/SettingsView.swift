@@ -64,6 +64,7 @@ enum DefaultFolderHandler {
 
 struct SettingsView: View {
     @ObservedObject private var updateManager = UpdateManager.shared
+    @ObservedObject private var locale = LocaleState.shared
     @State private var isDefault = DefaultFolderHandler.isDefault
     @State private var working = false
     @State private var statusMessage: String?
@@ -83,24 +84,36 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("Updates") {
-                LabeledContent("Version", value: updateManager.currentVersion)
-                Toggle("Check for updates automatically", isOn: autoCheckBinding)
-                Button("Check for Updates…") {
+            Section(L10n.s("Language")) {
+                Picker(L10n.s("Interface language"), selection: Binding(
+                    get: { locale.language },
+                    set: { locale.language = $0 }
+                )) {
+                    ForEach(AppLanguage.allCases) { lang in
+                        Text(lang.displayName).tag(lang)
+                    }
+                }
+                .pickerStyle(.radioGroup)
+            }
+
+            Section(L10n.s("Updates")) {
+                LabeledContent(L10n.s("Version"), value: updateManager.currentVersion)
+                Toggle(L10n.s("Check for updates automatically"), isOn: autoCheckBinding)
+                Button(L10n.s("Check for Updates…")) {
                     updateManager.checkForUpdates()
                 }
-                Text("Sparkle installs an update only when it carries the maintainer's signature. Version 1.5.2 and earlier need one manual download from GitHub.")
+                Text(L10n.s("Sparkle installs an update only when it carries the maintainer's signature. Version 1.5.2 and earlier need one manual download from GitHub."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            Section("Browse defaults") {
-                Text("New installs start with Finder-like settings: list view, date-modified groups sorted newest first, folders on top. Reset restores those defaults.")
+            Section(L10n.s("Browse defaults")) {
+                Text(L10n.s("New installs start with Finder-like settings: list view, date-modified groups sorted newest first, folders on top. Reset restores those defaults."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                Button("Reset to Finder defaults") {
+                Button(L10n.s("Reset to Finder defaults")) {
                     UserPreferences.applyFactoryBrowseDefaults()
                     viewModeRaw    = UserPreferences.defaultViewMode.rawValue
                     sortFieldRaw   = UserPreferences.defaultSortField.rawValue
@@ -110,11 +123,11 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Text editor") {
+            Section(L10n.s("Text editor")) {
                 Toggle(isOn: $sniffUnknown) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Open unknown file types in the editor")
-                        Text("When on, files without a known code extension open in FinderFlow’s editor if they look like text. When off, only known text/code files do.")
+                        Text(L10n.s("Open unknown file types in the editor"))
+                        Text(L10n.s("When on, files without a known code extension open in FinderFlow’s editor if they look like text. When off, only known text/code files do."))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -128,9 +141,9 @@ struct SettingsView: View {
                     set: { applyDefault($0) }
                 )) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Open folders in FinderFlow")
+                        Text(L10n.s("Open folders in FinderFlow"))
                             .font(.headline)
-                        Text("Routes folder-open actions (the `open` command, other apps, and “Open With”) to FinderFlow instead of Finder.")
+                        Text(L10n.s("Routes folder-open actions (the `open` command, other apps, and “Open With”) to FinderFlow instead of Finder."))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -146,14 +159,14 @@ struct SettingsView: View {
                 }
             }
 
-            Section("What this can and can't do") {
-                Label("FinderFlow opens when you open a folder from Terminal, other apps, or “Open With”.",
+            Section(L10n.s("What this can and can't do")) {
+                Label(L10n.s("FinderFlow opens when you open a folder from Terminal, other apps, or “Open With”."),
                       systemImage: "checkmark.circle")
                     .foregroundStyle(.green)
-                Label("Finder can't be fully replaced. The Desktop, drive mounting, Open/Save dialogs and the Dock’s Finder icon always stay Finder.",
+                Label(L10n.s("Finder can't be fully replaced. The Desktop, drive mounting, Open/Save dialogs and the Dock’s Finder icon always stay Finder."),
                       systemImage: "exclamationmark.triangle")
                     .foregroundStyle(.orange)
-                Label("Some changes only take effect after you log out and back in (or restart).",
+                Label(L10n.s("Some changes only take effect after you log out and back in (or restart)."),
                       systemImage: "arrow.clockwise.circle")
                     .foregroundStyle(.secondary)
             }
@@ -171,11 +184,11 @@ struct SettingsView: View {
             working = false
             isDefault = DefaultFolderHandler.isDefault
             if let error {
-                statusMessage = "Couldn’t update the setting: \(error.localizedDescription)"
+                statusMessage = L10n.sf("Couldn't update the setting: %@", error.localizedDescription)
             } else if enable {
-                statusMessage = "FinderFlow is now the default for folders. Log out and back in if some apps still open Finder."
+                statusMessage = L10n.s("FinderFlow is now the default for folders. Log out and back in if some apps still open Finder.")
             } else {
-                statusMessage = "Finder restored as the default for folders."
+                statusMessage = L10n.s("Finder restored as the default for folders.")
             }
         }
         if enable {

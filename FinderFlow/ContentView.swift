@@ -8,6 +8,7 @@ struct ContentView: View {
     @StateObject private var fileOps       = FileOperationsService()
     @StateObject private var tagService    = TagService()
     @EnvironmentObject  var  favorites:      FavoritesService
+    @EnvironmentObject  var  locale:        LocaleState
 
     @State private var currentPath:     URL       = FileManager.default.homeDirectoryForCurrentUser
     @State private var sidebarItem:     SidebarItem?
@@ -259,7 +260,7 @@ struct ContentView: View {
         .onReceive(fileOps.$lastActionFeedback.compactMap      { $0 }) { f in showToast(f) }
         .onReceive(folderService.$lastActionFeedback.compactMap { $0 }) { f in showToast(f) }
         .onReceive(NotificationCenter.default.publisher(for: .ffCopyPathFeedback)) { _ in
-            showToast(ActionFeedback(icon: "doc.on.clipboard.fill", message: "Path copied"))
+            showToast(ActionFeedback(icon: "doc.on.clipboard.fill", message: L10n.s("Path copied")))
         }
         // When a tag is selected, search Mac-wide; when cleared, reset tagged results
         .onChange(of: activeTagFilter) { _, tag in
@@ -334,12 +335,12 @@ struct ContentView: View {
     func promptAndCreateFolder() {
         let dest = activeDestination
         let alert = NSAlert()
-        alert.messageText     = "New Folder in \"\(dest.lastPathComponent)\""
-        alert.informativeText = "Enter a name for the new folder:"
-        alert.addButton(withTitle: "Create")
-        alert.addButton(withTitle: "Cancel")
+        alert.messageText     = L10n.sf("New Folder in \"%\"", dest.lastPathComponent)
+        alert.informativeText = L10n.s("Enter a name for the new folder:")
+        alert.addButton(withTitle: L10n.s("Create"))
+        alert.addButton(withTitle: L10n.s("Cancel"))
         let tf = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
-        tf.stringValue = "New Folder"; tf.selectText(nil)
+        tf.stringValue = L10n.s("New Folder"); tf.selectText(nil)
         alert.accessoryView = tf; alert.window.initialFirstResponder = tf
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         let name = tf.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -350,10 +351,10 @@ struct ContentView: View {
     func promptAndCreateFile() {
         let dest = activeDestination
         let alert = NSAlert()
-        alert.messageText     = "New File in \"\(dest.lastPathComponent)\""
-        alert.informativeText = "Enter a name for the new file (include extension, e.g. notes.txt):"
-        alert.addButton(withTitle: "Create")
-        alert.addButton(withTitle: "Cancel")
+        alert.messageText     = L10n.sf("New File in \"%\"", dest.lastPathComponent)
+        alert.informativeText = L10n.s("Enter a name for the new file (include extension, e.g. notes.txt):")
+        alert.addButton(withTitle: L10n.s("Create"))
+        alert.addButton(withTitle: L10n.s("Cancel"))
         let tf = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
         tf.stringValue = "untitled.txt"; tf.selectText(nil)
         alert.accessoryView = tf; alert.window.initialFirstResponder = tf
@@ -376,15 +377,16 @@ struct ContentView: View {
         guard !items.isEmpty else { return }
 
         let names = items.map(\.name)
-        let label = items.count == 1 ? "\"\(names[0])\"" : "\(items.count) items"
+        let label = L10n.actionLabel(names)
 
         let alert = NSAlert()
-        alert.messageText     = "Permanently delete \(label)?"
-        alert.informativeText = "This cannot be undone. The \(items.count == 1 ? "item" : "items") will be permanently deleted and cannot be recovered from Trash."
+        alert.messageText     = L10n.sf("Permanently delete %@?", label)
+        alert.informativeText = L10n.sf("This cannot be undone. %@ will be permanently deleted and cannot be recovered from Trash.",
+                                         L10n.s(items.count == 1 ? "The item" : "The items"))
         alert.alertStyle      = .warning
-        let deleteBtn = alert.addButton(withTitle: "Delete Permanently")
+        let deleteBtn = alert.addButton(withTitle: L10n.s("Delete Permanently"))
         deleteBtn.hasDestructiveAction = true
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: L10n.s("Cancel"))
 
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         selectedIDs = []
@@ -639,6 +641,7 @@ struct InAppToast: View {
 
 struct FilePreviewPanel: View {
     let item: FileItem?
+    @EnvironmentObject private var locale: LocaleState
 
     var body: some View {
         VStack(spacing: 0) {
@@ -658,10 +661,10 @@ struct FilePreviewPanel: View {
                         }
                     }
                     Divider()
-                    detailRow("Kind",     item.kind)
-                    if !item.isDirectory { detailRow("Size", item.formattedSize) }
-                    detailRow("Modified", item.formattedDateModified)
-                    detailRow("Created",  item.formattedDateCreated)
+                    detailRow(L10n.s("Kind"),     item.kind)
+                    if !item.isDirectory { detailRow(L10n.s("Size"), item.formattedSize) }
+                    detailRow(L10n.s("Modified"), item.formattedDateModified)
+                    detailRow(L10n.s("Created"),  item.formattedDateCreated)
                 }
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -670,7 +673,7 @@ struct FilePreviewPanel: View {
                 VStack(spacing: 12) {
                     Image(systemName: "doc.magnifyingglass")
                         .font(.system(size: 36)).foregroundStyle(.secondary)
-                    Text("Select a file\nto preview")
+                    Text(L10n.s("Select a file\nto preview"))
                         .font(.caption).foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }

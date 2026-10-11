@@ -24,6 +24,7 @@ struct MarkdownReaderView: View {
     var onClose: () -> Void = {}
     /// Pushes the live document title (with • when dirty) to the window titlebar.
     var onTitleChange: ((String) -> Void)? = nil
+    @EnvironmentObject private var locale: LocaleState
 
     @State private var navStack:   [URL]   = []
     @State private var current:    URL
@@ -76,13 +77,13 @@ struct MarkdownReaderView: View {
         .onDisappear { if isModified { try? editText.write(to: current, atomically: true, encoding: .utf8) } }
         .sheet(isPresented: $showLinkSheet) {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Insert link").font(.headline)
+                Text(L10n.s("Insert link")).font(.headline)
                 TextField("https://…", text: $linkURLDraft)
                     .textFieldStyle(.roundedBorder)
                 HStack {
                     Spacer()
-                    Button("Cancel") { showLinkSheet = false }
-                    Button("Insert") {
+                    Button(L10n.s("Cancel")) { showLinkSheet = false }
+                    Button(L10n.s("Insert")) {
                         editorCtrl.run { MarkdownFormatActions.link($0, url: linkURLDraft) }
                         showLinkSheet = false
                         isModified = true
@@ -112,13 +113,13 @@ struct MarkdownReaderView: View {
                     HStack(spacing: 3) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 11, weight: .semibold))
-                        Text(navStack.last?.deletingPathExtension().lastPathComponent ?? "Back")
+                        Text(navStack.last?.deletingPathExtension().lastPathComponent ?? L10n.s("Back"))
                             .font(.system(size: 12))
                             .lineLimit(1)
                     }
                 }
                 .buttonStyle(.borderless)
-                .help("Go back")
+                .help(L10n.s("Go back"))
 
                 Divider().frame(height: 16)
             }
@@ -143,8 +144,8 @@ struct MarkdownReaderView: View {
 
             // Read / Edit segmented toggle
             Picker("", selection: $mode) {
-                Text("Read").tag(MDMode.read)
-                Text("Edit").tag(MDMode.edit)
+                Text(L10n.s("Read")).tag(MDMode.read)
+                Text(L10n.s("Edit")).tag(MDMode.edit)
             }
             .pickerStyle(.segmented)
             .frame(width: 100)
@@ -184,11 +185,11 @@ struct MarkdownReaderView: View {
                     .font(.caption)
             }
             .buttonStyle(.borderless)
-            .help("Open in FinderFlow editor")
+            .help(L10n.s("Open in FinderFlow editor"))
 
             Divider().frame(height: 16)
 
-            Button("Done") { if isModified { commitSave() }; onClose() }
+            Button(L10n.s("Done")) { if isModified { commitSave() }; onClose() }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
                 .keyboardShortcut(.escape, modifiers: [])
@@ -204,56 +205,56 @@ struct MarkdownReaderView: View {
 
     private var formatToolbar: some View {
         HStack(spacing: 2) {
-            formatButton("arrow.uturn.backward", help: "Undo", enabled: editorCtrl.canUndo) {
+            formatButton("arrow.uturn.backward", help: L10n.s("Undo"), enabled: editorCtrl.canUndo) {
                 editorCtrl.run { MarkdownFormatActions.undo($0) }
             }
-            formatButton("arrow.uturn.forward", help: "Redo", enabled: editorCtrl.canRedo) {
+            formatButton("arrow.uturn.forward", help: L10n.s("Redo"), enabled: editorCtrl.canRedo) {
                 editorCtrl.run { MarkdownFormatActions.redo($0) }
             }
             Divider().frame(height: 16).padding(.horizontal, 4)
 
-            formatButton("bold", help: "Bold") {
+            formatButton("bold", help: L10n.s("Bold")) {
                 editorCtrl.run { MarkdownFormatActions.bold($0) }; isModified = true
             }
-            formatButton("italic", help: "Italic") {
+            formatButton("italic", help: L10n.s("Italic")) {
                 editorCtrl.run { MarkdownFormatActions.italic($0) }; isModified = true
             }
-            formatButton("strikethrough", help: "Strikethrough") {
+            formatButton("strikethrough", help: L10n.s("Strikethrough")) {
                 editorCtrl.run { MarkdownFormatActions.strikethrough($0) }; isModified = true
             }
-            formatButton("chevron.left.forwardslash.chevron.right", help: "Inline code") {
+            formatButton("chevron.left.forwardslash.chevron.right", help: L10n.s("Inline code")) {
                 editorCtrl.run { MarkdownFormatActions.inlineCode($0) }; isModified = true
             }
             Divider().frame(height: 16).padding(.horizontal, 4)
 
-            formatButton("textformat.size.larger", help: "Heading 1") {
+            formatButton("textformat.size.larger", help: L10n.s("Heading 1")) {
                 editorCtrl.run { MarkdownFormatActions.heading($0, level: 1) }; isModified = true
             }
-            formatButton("textformat.size", help: "Heading 2") {
+            formatButton("textformat.size", help: L10n.s("Heading 2")) {
                 editorCtrl.run { MarkdownFormatActions.heading($0, level: 2) }; isModified = true
             }
-            formatButton("textformat.size.smaller", help: "Heading 3") {
+            formatButton("textformat.size.smaller", help: L10n.s("Heading 3")) {
                 editorCtrl.run { MarkdownFormatActions.heading($0, level: 3) }; isModified = true
             }
             Divider().frame(height: 16).padding(.horizontal, 4)
 
-            formatButton("list.bullet", help: "Bullet list") {
+            formatButton("list.bullet", help: L10n.s("Bullet list")) {
                 editorCtrl.run { MarkdownFormatActions.bulletList($0) }; isModified = true
             }
-            formatButton("list.number", help: "Numbered list") {
+            formatButton("list.number", help: L10n.s("Numbered list")) {
                 editorCtrl.run { MarkdownFormatActions.numberedList($0) }; isModified = true
             }
-            formatButton("text.quote", help: "Quote") {
+            formatButton("text.quote", help: L10n.s("Quote")) {
                 editorCtrl.run { MarkdownFormatActions.quote($0) }; isModified = true
             }
-            formatButton("curlybraces", help: "Code block") {
+            formatButton("curlybraces", help: L10n.s("Code block")) {
                 editorCtrl.run { MarkdownFormatActions.codeFence($0) }; isModified = true
             }
-            formatButton("link", help: "Link") {
+            formatButton("link", help: L10n.s("Link")) {
                 linkURLDraft = "https://"
                 showLinkSheet = true
             }
-            formatButton("minus", help: "Horizontal rule") {
+            formatButton("minus", help: L10n.s("Horizontal rule")) {
                 editorCtrl.run { MarkdownFormatActions.horizontalRule($0) }; isModified = true
             }
             Spacer(minLength: 0)
@@ -321,12 +322,12 @@ struct MarkdownReaderView: View {
         do {
             try editText.write(to: current, atomically: true, encoding: .utf8)
             isModified = false
-            withAnimation(.easeOut(duration: 0.2)) { saveFlash = "Saved" }
+            withAnimation(.easeOut(duration: 0.2)) { saveFlash = L10n.s("Saved") }
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
                 withAnimation(.easeOut(duration: 0.3)) { saveFlash = nil }
             }
         } catch {
-            saveFlash = "Save failed"
+            saveFlash = L10n.s("Save failed")
         }
     }
 

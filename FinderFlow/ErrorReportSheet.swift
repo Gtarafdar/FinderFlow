@@ -5,6 +5,7 @@ import AppKit
 /// Copy and Contact Support are user-initiated only (no silent upload).
 struct ErrorReportSheet: View {
     let message: String
+    @EnvironmentObject private var locale: LocaleState
     let onDismiss: () -> Void
 
     private var summary: String {
@@ -31,7 +32,7 @@ struct ErrorReportSheet: View {
             HStack(spacing: 8) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(.orange)
-                Text("Error")
+                Text(L10n.s("Error"))
                     .font(.headline)
                 Spacer()
             }
@@ -42,7 +43,7 @@ struct ErrorReportSheet: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             if message.count > 240 {
-                GroupBox("Details") {
+                GroupBox(L10n.s("Details")) {
                     ScrollView {
                         Text(message)
                             .font(.system(size: 11, design: .monospaced))
@@ -54,18 +55,18 @@ struct ErrorReportSheet: View {
             }
 
             HStack(spacing: 10) {
-                Button("Copy") {
+                Button(L10n.s("Copy")) {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(diagnosticBlob, forType: .string)
                 }
                 .keyboardShortcut("c", modifiers: [.command, .shift])
 
-                Button("Contact Support") { openSupport() }
-                    .help("Copies diagnostics, then opens GitHub Issues")
+                Button(L10n.s("Contact Support")) { openSupport() }
+                    .help(L10n.s("Copies diagnostics, then opens GitHub Issues"))
 
                 Spacer()
 
-                Button("OK", role: .cancel, action: onDismiss)
+                Button(L10n.s("OK"), role: .cancel, action: onDismiss)
                     .keyboardShortcut(.defaultAction)
                     .keyboardShortcut(.escape, modifiers: [])
             }

@@ -19,6 +19,7 @@ struct ListView: View {
     let onReload:      () -> Void
     @ObservedObject var fileOps:   FileOperationsService
     @ObservedObject var favorites: FavoritesService
+    @EnvironmentObject private var locale: LocaleState
 
     @State private var sortOrder:       [KeyPathComparator<FileItem>] = [.init(\.name, order: .forward)]
     @State private var renamingID:      String?
@@ -54,7 +55,7 @@ struct ListView: View {
 
     private var tableView: some View {
         Table(files, selection: $selectedIDs, sortOrder: $sortOrder) {
-            TableColumn("Name", value: \.name) { item in
+            TableColumn(L10n.s("Name"), value: \.name) { item in
                 HStack(spacing: 6) {
                     Image(nsImage: item.icon).resizable().frame(width: 16, height: 16)
                         .allowsHitTesting(false)
@@ -83,24 +84,24 @@ struct ListView: View {
             }
             .width(min: 140, ideal: 280, max: 600)
 
-            TableColumn("Date Modified", value: \.dateModified) { item in
+            TableColumn(L10n.s("Date Modified"), value: \.dateModified) { item in
                 Text(item.formattedDateModified).foregroundStyle(.secondary)
             }.width(min: 100, ideal: 148, max: 240)
 
-            TableColumn("Date Created", value: \.dateCreated) { item in
+            TableColumn(L10n.s("Date Created"), value: \.dateCreated) { item in
                 Text(item.formattedDateCreated).foregroundStyle(.secondary)
             }.width(min: 100, ideal: 148, max: 240)
 
-            TableColumn("Size", value: \.size) { item in
+            TableColumn(L10n.s("Size"), value: \.size) { item in
                 Text(item.formattedSize).foregroundStyle(.secondary).monospacedDigit()
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }.width(min: 50, ideal: 80, max: 140)
 
-            TableColumn("Kind", value: \.kind) { item in
+            TableColumn(L10n.s("Kind"), value: \.kind) { item in
                 Text(item.kind).foregroundStyle(.secondary)
             }.width(min: 60, ideal: 110, max: 200)
 
-            TableColumn("Extension", value: \.fileExtension) { item in
+            TableColumn(L10n.s("Extension"), value: \.fileExtension) { item in
                 Text(item.fileExtension.isEmpty ? "—" : item.fileExtension.uppercased())
                     .foregroundStyle(.secondary)
             }.width(min: 40, ideal: 68, max: 120)
@@ -207,77 +208,77 @@ struct ListView: View {
         if let item = sel.first {
             let urls = sel.map(\.url)
 
-            Button("Open")               { onNavigate(item) }
+            Button(L10n.s("Open"))               { onNavigate(item) }
             if item.isBrowsableFolder {
-                Button("Open in New Window") { NSWorkspace.shared.open(item.url) }
+                Button(L10n.s("Open in New Window")) { NSWorkspace.shared.open(item.url) }
             } else if item.isPackage {
-                Button("Show Package Contents") { onBrowseInto(item.url) }
+                Button(L10n.s("Show Package Contents")) { onBrowseInto(item.url) }
             }
             Divider()
-            Button("Quick Look")         { quickLook(ids: ids) }
-            Button("Get Info")           { showGetInfo(for: sel) }
+            Button(L10n.s("Quick Look"))         { quickLook(ids: ids) }
+            Button(L10n.s("Get Info"))           { showGetInfo(for: sel) }
             Divider()
-            Button("Rename…")            { pendingRenameURL = item.url }
-            Button(sel.count > 1 ? "Duplicate \(sel.count) Items" : "Duplicate") {
+            Button(L10n.s("Rename…"))            { pendingRenameURL = item.url }
+            Button(sel.count > 1 ? L10n.sf("Duplicate %d Items", sel.count) : L10n.s("Duplicate")) {
                 fileOps.duplicate(urls, reload: onReload)
             }
-            Button(sel.count > 1 ? "Make \(sel.count) Aliases" : "Make Alias") {
+            Button(sel.count > 1 ? L10n.sf("Make %d Aliases", sel.count) : L10n.s("Make Alias")) {
                 urls.forEach { fileOps.makeAlias(for: $0, reload: onReload) }
             }
-            Button(sel.count > 1 ? "Compress \(sel.count) Items" : "Compress \"\(item.name)\"") {
+            Button(sel.count > 1 ? L10n.sf("Compress %d Items", sel.count) : L10n.sf("Compress \"%\"", item.name)) {
                 fileOps.compress(urls, reload: onReload)
             }
             if sel.count == 1 && item.isArchive {
-                Button("Extract Here") { fileOps.extract(item.url, reload: onReload) }
+                Button(L10n.s("Extract Here")) { fileOps.extract(item.url, reload: onReload) }
             }
             Divider()
-            Button("Cut")                { fileOps.cut(urls) }
-            Button("Copy")               { fileOps.copy(urls) }
-            Button("Paste") {
+            Button(L10n.s("Cut"))                { fileOps.cut(urls) }
+            Button(L10n.s("Copy"))               { fileOps.copy(urls) }
+            Button(L10n.s("Paste")) {
                 let dest = (sel.count == 1 && item.isDirectory) ? item.url : currentPath
                 fileOps.paste(to: dest, reload: onReload)
             }
             .disabled(fileOps.pasteboardURLs.isEmpty)
             Divider()
-            Menu("Share") {
-                Button("AirDrop")        { fileOps.shareViaAirDrop(urls) }
+            Menu(L10n.s("Share")) {
+                Button(L10n.s("AirDrop"))        { fileOps.shareViaAirDrop(urls) }
                 Divider()
-                Button("Share…")         { fileOps.showShareSheet(for: urls) }
+                Button(L10n.s("Share…"))         { fileOps.showShareSheet(for: urls) }
             }
             Divider()
-            Menu("Tags") {
+            Menu(L10n.s("Tags")) {
                 TagMenuContent(targets: sel, fileOps: fileOps, onReload: onReload)
             }
             Divider()
             if item.isDirectory {
                 if favorites.isPinned(item.url) {
-                    Button("Remove from Sidebar") { favorites.unpin(item.url) }
+                    Button(L10n.s("Remove from Sidebar")) { favorites.unpin(item.url) }
                 } else {
-                    Button("Add to Sidebar") { favorites.pin(item.url) }
+                    Button(L10n.s("Add to Sidebar")) { favorites.pin(item.url) }
                 }
             }
-            Button("Show in Finder") {
+            Button(L10n.s("Show in Finder")) {
                 NSWorkspace.shared.selectFile(item.url.path, inFileViewerRootedAtPath: "")
             }
-            Button(sel.count > 1 ? "Copy \(sel.count) Paths" : "Copy Path") {
+            Button(sel.count > 1 ? L10n.sf("Copy %d Paths", sel.count) : L10n.s("Copy Path")) {
                 fileOps.copyPath(urls.map(\.path).joined(separator: "\n"))
             }
             Divider()
-            Button("Move to Trash", role: .destructive) {
+            Button(L10n.s("Move to Trash"), role: .destructive) {
                 fileOps.trash(urls, reload: onReload)
             }
-            Button("Delete Permanently…", role: .destructive) {
+            Button(L10n.s("Delete Permanently…"), role: .destructive) {
                 confirmPermanentDelete(names: sel.map(\.name)) {
                     fileOps.permanentlyDelete(urls, reload: onReload)
                 }
             }
         } else {
-            Button("Paste") { fileOps.paste(to: currentPath, reload: onReload) }
+            Button(L10n.s("Paste")) { fileOps.paste(to: currentPath, reload: onReload) }
                 .disabled(fileOps.pasteboardURLs.isEmpty)
-            if fileOps.canUndo { Button("Undo") { fileOps.undo() } }
-            if fileOps.canRedo { Button("Redo") { fileOps.redo() } }
+            if fileOps.canUndo { Button(L10n.s("Undo")) { fileOps.undo() } }
+            if fileOps.canRedo { Button(L10n.s("Redo")) { fileOps.redo() } }
             Divider()
-            Button("Refresh") { onReload() }
+            Button(L10n.s("Refresh")) { onReload() }
         }
     }
 
@@ -307,6 +308,7 @@ struct GroupedListView: View {
     let onReload:    () -> Void
     @ObservedObject var fileOps:   FileOperationsService
     @ObservedObject var favorites: FavoritesService
+    @EnvironmentObject private var locale: LocaleState
 
     @State private var renamingID:      String?
     @State private var renameText:      String = ""
@@ -435,63 +437,63 @@ struct GroupedListView: View {
         let targets = sel.isEmpty ? [item] : sel
         let urls    = targets.map(\.url)
 
-        Button("Open")       { onNavigate(item) }
+        Button(L10n.s("Open"))       { onNavigate(item) }
         if item.isBrowsableFolder {
-            Button("Open in New Window") { NSWorkspace.shared.open(item.url) }
+            Button(L10n.s("Open in New Window")) { NSWorkspace.shared.open(item.url) }
         } else if item.isPackage {
-            Button("Show Package Contents") { onBrowseInto(item.url) }
+            Button(L10n.s("Show Package Contents")) { onBrowseInto(item.url) }
         }
-        Button("Quick Look") { QuickLookController.shared.show(urls) }
-        Button("Get Info")   { showGetInfoInFinder([item.url]) }
+        Button(L10n.s("Quick Look")) { QuickLookController.shared.show(urls) }
+        Button(L10n.s("Get Info"))   { showGetInfoInFinder([item.url]) }
         Divider()
-        Button("Rename…")   { pendingRenameURL = item.url }
-        Button("Duplicate") { fileOps.duplicate(urls, reload: onReload) }
-        Button(targets.count > 1 ? "Make \(targets.count) Aliases" : "Make Alias") {
+        Button(L10n.s("Rename…"))   { pendingRenameURL = item.url }
+        Button(L10n.s("Duplicate")) { fileOps.duplicate(urls, reload: onReload) }
+        Button(targets.count > 1 ? L10n.sf("Make %d Aliases", targets.count) : L10n.s("Make Alias")) {
             urls.forEach { fileOps.makeAlias(for: $0, reload: onReload) }
         }
-        Button(targets.count > 1 ? "Compress \(targets.count) Items" : "Compress \"\(item.name)\"") {
+        Button(targets.count > 1 ? L10n.sf("Compress %d Items", targets.count) : L10n.sf("Compress \"%\"", item.name)) {
             fileOps.compress(urls, reload: onReload)
         }
         if targets.count == 1, item.isArchive {
-            Button("Extract Here") { fileOps.extract(item.url, reload: onReload) }
+            Button(L10n.s("Extract Here")) { fileOps.extract(item.url, reload: onReload) }
         }
         Divider()
-        Button("Cut")  { fileOps.cut(urls) }
-        Button("Copy") { fileOps.copy(urls) }
-        Button("Paste") {
+        Button(L10n.s("Cut"))  { fileOps.cut(urls) }
+        Button(L10n.s("Copy")) { fileOps.copy(urls) }
+        Button(L10n.s("Paste")) {
             let dest = (targets.count == 1 && item.isDirectory) ? item.url : currentPath
             fileOps.paste(to: dest, reload: onReload)
         }
         .disabled(fileOps.pasteboardURLs.isEmpty)
         Divider()
-        Menu("Share") {
-            Button("AirDrop") { fileOps.shareViaAirDrop(urls) }
+        Menu(L10n.s("Share")) {
+            Button(L10n.s("AirDrop")) { fileOps.shareViaAirDrop(urls) }
             Divider()
-            Button("Share…") { fileOps.showShareSheet(for: urls) }
+            Button(L10n.s("Share…")) { fileOps.showShareSheet(for: urls) }
         }
         Divider()
-        Menu("Tags") {
+        Menu(L10n.s("Tags")) {
             TagMenuContent(targets: targets, fileOps: fileOps, onReload: onReload)
         }
         Divider()
         if item.isBrowsableFolder {
             if favorites.isPinned(item.url) {
-                Button("Remove from Sidebar") { favorites.unpin(item.url) }
+                Button(L10n.s("Remove from Sidebar")) { favorites.unpin(item.url) }
             } else {
-                Button("Add to Sidebar") { favorites.pin(item.url) }
+                Button(L10n.s("Add to Sidebar")) { favorites.pin(item.url) }
             }
         }
-        Button("Show in Finder") {
+        Button(L10n.s("Show in Finder")) {
             NSWorkspace.shared.selectFile(item.url.path, inFileViewerRootedAtPath: "")
         }
-        Button(targets.count > 1 ? "Copy \(targets.count) Paths" : "Copy Path") {
+        Button(targets.count > 1 ? L10n.sf("Copy %d Paths", targets.count) : L10n.s("Copy Path")) {
             fileOps.copyPath(urls.map(\.path).joined(separator: "\n"))
         }
         Divider()
-        Button("Move to Trash", role: .destructive) {
+        Button(L10n.s("Move to Trash"), role: .destructive) {
             fileOps.trash(urls, reload: onReload)
         }
-        Button("Delete Permanently…", role: .destructive) {
+        Button(L10n.s("Delete Permanently…"), role: .destructive) {
             confirmPermanentDelete(names: targets.map(\.name)) {
                 fileOps.permanentlyDelete(urls, reload: onReload)
             }
@@ -531,6 +533,7 @@ struct GroupedRow: View {
 struct DateSectionHeader: View {
     let title: String
     let count: Int
+    @EnvironmentObject private var locale: LocaleState
 
     var body: some View {
         HStack(spacing: 0) {
@@ -539,7 +542,7 @@ struct DateSectionHeader: View {
                 .foregroundStyle(.secondary)
                 .textCase(nil)
             Spacer()
-            Text("\(count) \(count == 1 ? "item" : "items")")
+            Text(L10n.itemsLabel(count))
                 .font(.system(size: 10))
                 .foregroundStyle(Color(nsColor: .tertiaryLabelColor))
         }
@@ -554,11 +557,13 @@ struct DateSectionHeader: View {
 }
 
 struct FolderBackgroundMenu: View {
+    @EnvironmentObject private var locale: LocaleState
+
     var body: some View {
-        Button("New Folder") {
+        Button(L10n.s("New Folder")) {
             NotificationCenter.default.post(name: .createNewFolder, object: nil)
         }
-        Button("New File") {
+        Button(L10n.s("New File")) {
             NotificationCenter.default.post(name: .createNewFile, object: nil)
         }
     }

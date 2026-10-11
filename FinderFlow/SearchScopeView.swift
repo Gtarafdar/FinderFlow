@@ -43,14 +43,15 @@ enum SearchScope: String, CaseIterable {
 
 struct SearchScopeView: View {
     let currentPath: URL
+    @EnvironmentObject private var locale: LocaleState
     @ObservedObject var searchEngine: SearchEngine
     var body: some View {
         HStack(spacing: 8) {
 
             // ── Scope picker ──────────────────────────────────────────────
-            Picker("Scope", selection: $searchEngine.selectedScope) {
+            Picker(L10n.s("Scope"), selection: $searchEngine.selectedScope) {
                 ForEach(SearchScope.allCases, id: \.self) { scope in
-                    Label(scope.rawValue, systemImage: scope.icon).tag(scope)
+                    Label(L10n.s(scope.rawValue), systemImage: scope.icon).tag(scope)
                 }
             }
             .pickerStyle(.menu)
@@ -74,7 +75,7 @@ struct SearchScopeView: View {
                         .font(.caption)
                 }
 
-                TextField("Name or .ext (e.g. .pdf)…", text: $searchEngine.query)
+                TextField(L10n.s("Name or .ext (e.g. .pdf)…"), text: $searchEngine.query)
                     .textFieldStyle(.plain)
                     .resetsCursorOnExit()
                     .onSubmit {
@@ -114,7 +115,7 @@ struct SearchScopeView: View {
 
             // ── Result count badge ────────────────────────────────────────
             if !searchEngine.query.isEmpty && !searchEngine.isSearching {
-                Text("\(searchEngine.results.count) found")
+                Text(L10n.sf("%d found", searchEngine.results.count))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .fixedSize()

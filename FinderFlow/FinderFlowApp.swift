@@ -10,6 +10,7 @@ struct FinderFlowApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(favorites)
+                .environmentObject(LocaleState.shared)
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
@@ -19,6 +20,7 @@ struct FinderFlowApp: App {
 
         Settings {
             SettingsView()
+                .environmentObject(LocaleState.shared)
         }
     }
 }
@@ -117,25 +119,25 @@ struct FinderFlowCommands: Commands {
 
     var body: some Commands {
         CommandMenu("FinderFlow") {
-            Button("New Folder") {
+            Button(L10n.s("New Folder")) {
                 NotificationCenter.default.post(name: .createNewFolder, object: nil)
             }
             .keyboardShortcut("n", modifiers: [.command, .option])
 
-            Button("Toggle Hidden Files") {
+            Button(L10n.s("Toggle Hidden Files")) {
                 NotificationCenter.default.post(name: .toggleHiddenFiles, object: nil)
             }
             .keyboardShortcut(".", modifiers: [.command, .shift])
 
             Divider()
 
-            Button("Check for Updates…") {
+            Button(L10n.s("Check for Updates…")) {
                 UpdateManager.shared.checkForUpdates()
             }
 
             Divider()
 
-            Toggle("Launch at Login", isOn: Binding(
+            Toggle(L10n.s("Launch at Login"), isOn: Binding(
                 get: { launchAtLogin },
                 set: { newValue in
                     launchAtLogin = newValue

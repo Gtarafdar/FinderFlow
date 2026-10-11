@@ -22,6 +22,7 @@ struct ColumnsView: View {
     let isSearchActive: Bool
     /// Opens files the same way List/Icons do (Markdown reader, Ace, workspace).
     let onOpen: (URL) -> Void
+    @EnvironmentObject private var locale: LocaleState
 
     @State private var columns:         [URL]          = []
     @State private var colWidths:       [Int: CGFloat] = [:]
@@ -177,7 +178,7 @@ struct ColumnsView: View {
 
     @ViewBuilder
     private func columnContextMenu(item: FileItem, directory: URL) -> some View {
-        Button("Open") {
+        Button(L10n.s("Open")) {
             if item.isBrowsableFolder {
                 currentPath = item.url
             } else {
@@ -185,18 +186,18 @@ struct ColumnsView: View {
             }
         }
         if item.isBrowsableFolder {
-            Button("Open in New Window") { NSWorkspace.shared.open(item.url) }
+            Button(L10n.s("Open in New Window")) { NSWorkspace.shared.open(item.url) }
         }
         Divider()
-        Button("Quick Look") { QuickLookController.shared.show([item.url]) }
-        Button("Get Info") { showGetInfoInFinder([item.url]) }
+        Button(L10n.s("Quick Look")) { QuickLookController.shared.show([item.url]) }
+        Button(L10n.s("Get Info")) { showGetInfoInFinder([item.url]) }
         Divider()
-        Button("Show in Finder") {
+        Button(L10n.s("Show in Finder")) {
             NSWorkspace.shared.selectFile(item.url.path, inFileViewerRootedAtPath: "")
         }
-        Button("Copy Path") { fileOps.copyPath(item.url.path) }
+        Button(L10n.s("Copy Path")) { fileOps.copyPath(item.url.path) }
         Divider()
-        Button("Move to Trash", role: .destructive) {
+        Button(L10n.s("Move to Trash"), role: .destructive) {
             fileOps.trash([item.url], reload: {})
         }
     }
@@ -224,6 +225,7 @@ struct ColumnsView: View {
 struct ColumnPreviewPane: View {
     let url: URL
     @State private var item: FileItem?
+    @EnvironmentObject private var locale: LocaleState
 
     var body: some View {
         VStack(spacing: 0) {
@@ -244,10 +246,10 @@ struct ColumnPreviewPane: View {
                         }
                     }
                     Divider()
-                    detailRow("Kind",     item.kind)
-                    detailRow("Size",     item.formattedSize)
-                    detailRow("Modified", item.formattedDateModified)
-                    detailRow("Created",  item.formattedDateCreated)
+                    detailRow(L10n.s("Kind"),     item.kind)
+                    detailRow(L10n.s("Size"),     item.formattedSize)
+                    detailRow(L10n.s("Modified"), item.formattedDateModified)
+                    detailRow(L10n.s("Created"),  item.formattedDateCreated)
                 }
                 .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -404,6 +406,7 @@ struct ColumnPane: View {
     let onOpen:         (URL) -> Void
     @ObservedObject var fileOps:   FileOperationsService
     @ObservedObject var favorites: FavoritesService
+    @EnvironmentObject private var locale: LocaleState
 
     @State private var items: [FileItem] = []
     @State private var reloadGeneration: UInt = 0
@@ -428,19 +431,19 @@ struct ColumnPane: View {
         .listStyle(.plain)
         // Background right-click (empty space or empty folder)
         .contextMenu {
-            Button("Paste") { fileOps.paste(to: directory, reload: reload) }
+            Button(L10n.s("Paste")) { fileOps.paste(to: directory, reload: reload) }
                 .disabled(fileOps.pasteboardURLs.isEmpty)
             Divider()
-            Button("New Folder") {
+            Button(L10n.s("New Folder")) {
                 NotificationCenter.default.post(name: .createNewFolder, object: nil)
             }
-            Button("New File") {
+            Button(L10n.s("New File")) {
                 NotificationCenter.default.post(name: .createNewFile, object: nil)
             }
-            if fileOps.canUndo { Button("Undo") { fileOps.undo() } }
-            if fileOps.canRedo { Button("Redo") { fileOps.redo() } }
+            if fileOps.canUndo { Button(L10n.s("Undo")) { fileOps.undo() } }
+            if fileOps.canRedo { Button(L10n.s("Redo")) { fileOps.redo() } }
             Divider()
-            Button("Refresh") { reload() }
+            Button(L10n.s("Refresh")) { reload() }
         }
         .onAppear {
             reload()
@@ -483,7 +486,7 @@ struct ColumnPane: View {
 
     @ViewBuilder
     private func columnContextMenu(item: FileItem) -> some View {
-        Button("Open") {
+        Button(L10n.s("Open")) {
             if item.isBrowsableFolder {
                 onSelect(item)
             } else {
@@ -491,58 +494,58 @@ struct ColumnPane: View {
             }
         }
         if item.isBrowsableFolder {
-            Button("Open in New Window") { NSWorkspace.shared.open(item.url) }
+            Button(L10n.s("Open in New Window")) { NSWorkspace.shared.open(item.url) }
         } else if item.isPackage {
-            Button("Show Package Contents") { onBrowseInto(item.url) }
+            Button(L10n.s("Show Package Contents")) { onBrowseInto(item.url) }
         }
         Divider()
-        Button("Quick Look") { QuickLookController.shared.show([item.url]) }
-        Button("Get Info")   { showGetInfo(item: item) }
+        Button(L10n.s("Quick Look")) { QuickLookController.shared.show([item.url]) }
+        Button(L10n.s("Get Info"))   { showGetInfo(item: item) }
         Divider()
-        Button("Rename…")    { promptRename(item: item) }
-        Button("Duplicate")  { fileOps.duplicate([item.url], reload: reload) }
-        Button("Make Alias") { fileOps.makeAlias(for: item.url, reload: reload) }
-        Button("Compress \"\(item.name)\"") { fileOps.compress([item.url], reload: reload) }
+        Button(L10n.s("Rename…"))    { promptRename(item: item) }
+        Button(L10n.s("Duplicate"))  { fileOps.duplicate([item.url], reload: reload) }
+        Button(L10n.s("Make Alias")) { fileOps.makeAlias(for: item.url, reload: reload) }
+        Button(L10n.sf("Compress \"%\"", item.name)) { fileOps.compress([item.url], reload: reload) }
         if item.isArchive {
-            Button("Extract Here") { fileOps.extract(item.url, reload: reload) }
+            Button(L10n.s("Extract Here")) { fileOps.extract(item.url, reload: reload) }
         }
         Divider()
-        Button("Cut")   { fileOps.cut([item.url]) }
-        Button("Copy")  { fileOps.copy([item.url]) }
-        Button("Paste") {
+        Button(L10n.s("Cut"))   { fileOps.cut([item.url]) }
+        Button(L10n.s("Copy"))  { fileOps.copy([item.url]) }
+        Button(L10n.s("Paste")) {
             let dest = item.isDirectory ? item.url : directory
             fileOps.paste(to: dest, reload: reload)
         }
         .disabled(fileOps.pasteboardURLs.isEmpty)
         Divider()
-        Menu("Share") {
-            Button("AirDrop") { fileOps.shareViaAirDrop([item.url]) }
+        Menu(L10n.s("Share")) {
+            Button(L10n.s("AirDrop")) { fileOps.shareViaAirDrop([item.url]) }
             Divider()
-            Button("Share…")  { fileOps.showShareSheet(for: [item.url]) }
+            Button(L10n.s("Share…"))  { fileOps.showShareSheet(for: [item.url]) }
         }
         Divider()
-        Menu("Tags") {
+        Menu(L10n.s("Tags")) {
             TagMenuContent(targets: [item], fileOps: fileOps, onReload: reload)
         }
         Divider()
         if item.isDirectory {
             if favorites.isPinned(item.url) {
-                Button("Remove from Sidebar") { favorites.unpin(item.url) }
+                Button(L10n.s("Remove from Sidebar")) { favorites.unpin(item.url) }
             } else {
-                Button("Add to Sidebar") { favorites.pin(item.url) }
+                Button(L10n.s("Add to Sidebar")) { favorites.pin(item.url) }
             }
         }
-        Button("Show in Finder") {
+        Button(L10n.s("Show in Finder")) {
             NSWorkspace.shared.selectFile(item.url.path, inFileViewerRootedAtPath: "")
         }
-        Button("Copy Path") {
+        Button(L10n.s("Copy Path")) {
             fileOps.copyPath(item.url.path)
         }
         Divider()
-        Button("Move to Trash", role: .destructive) {
+        Button(L10n.s("Move to Trash"), role: .destructive) {
             fileOps.trash([item.url], reload: reload)
         }
-        Button("Delete Permanently…", role: .destructive) {
+        Button(L10n.s("Delete Permanently…"), role: .destructive) {
             confirmPermanentDelete(names: [item.name]) {
                 fileOps.permanentlyDelete([item.url], reload: reload)
             }
@@ -583,10 +586,10 @@ struct ColumnPane: View {
 
     private func promptRename(item: FileItem) {
         let alert = NSAlert()
-        alert.messageText     = "Rename \"\(item.name)\""
-        alert.informativeText = "Enter a new name:"
-        alert.addButton(withTitle: "Rename")
-        alert.addButton(withTitle: "Cancel")
+        alert.messageText     = L10n.sf("Rename \"%\"", item.name)
+        alert.informativeText = L10n.s("Enter a new name:")
+        alert.addButton(withTitle: L10n.s("Rename"))
+        alert.addButton(withTitle: L10n.s("Cancel"))
         let tf = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
         tf.stringValue = item.name; tf.selectText(nil)
         alert.accessoryView = tf; alert.window.initialFirstResponder = tf
