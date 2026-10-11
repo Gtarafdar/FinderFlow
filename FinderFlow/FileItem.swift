@@ -154,8 +154,8 @@ struct FileItem: Identifiable, Hashable {
         // Prefer localized kind when present; otherwise a cheap extension-based label
         // so we don't require .localizedTypeDescriptionKey on every folder open.
         let kind = v.localizedTypeDescription
-            ?? (isDir && !isPkg ? "Folder"
-                : (ext.isEmpty ? "File" : "\(ext.uppercased()) File"))
+            ?? (isDir && !isPkg ? L10n.s("Folder")
+                : (ext.isEmpty ? L10n.s("File") : L10n.sf("%@ File", ext.uppercased())))
         return FileItem(
             id:            url.path,
             url:           url,
@@ -196,8 +196,8 @@ struct FileItem: Identifiable, Hashable {
     var formattedSize: String {
         isDirectory ? "—" : ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
     }
-    var formattedDateModified: String { Self.fmt.string(from: dateModified) }
-    var formattedDateCreated:  String { Self.fmt.string(from: dateCreated) }
+    var formattedDateModified: String { Self.dateFormatter().string(from: dateModified) }
+    var formattedDateCreated:  String { Self.dateFormatter().string(from: dateCreated) }
 
     var dateCategory: DateCategory { DateCategory.of(dateModified) }
     var dateCreatedCategory: DateCategory { DateCategory.of(dateCreated) }
@@ -271,9 +271,19 @@ struct FileItem: Identifiable, Hashable {
         ["zip","tar","gz","tgz","bz2","xz","7z","rar","pkg","dmg"].contains(fileExtension)
     }
 
-    private static let fmt: DateFormatter = {
-        let f = DateFormatter(); f.dateStyle = .medium; f.timeStyle = .short; return f
-    }()
+    /// Date formatter for the active interface language, cached per language
+    /// (formatters are created once and are not touched by language switches
+    /// until the next lookup in that language).
+    private static var dateFmtCache: [String: DateFormatter] = [:]
+    static func dateFormatter() -> DateFormatter {
+        let key = AppLanguage.effective.rawValue
+        if let hit = dateFmtCache[key] { return hit }
+        let f = DateFormatter()
+        f.dateStyle = .medium; f.timeStyle = .short
+        f.locale = AppLanguage.effective.locale
+        dateFmtCache[key] = f
+        return f
+    }
 
     static func == (lhs: FileItem, rhs: FileItem) -> Bool { lhs.id == rhs.id }
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
@@ -312,6 +322,7 @@ struct TagMenuContent: View {
     let targets: [FileItem]
     @ObservedObject var fileOps: FileOperationsService
     let onReload: () -> Void
+    @EnvironmentObject private var locale: LocaleState
 
     private var urls: [URL] { targets.map(\.url) }
 
@@ -327,7 +338,7 @@ struct TagMenuContent: View {
             ))
         }
         Divider()
-        Button("Clear Tags") { fileOps.clearTags(on: urls, reload: onReload) }
+        Button(L10n.s("Clear Tags")) { fileOps.clearTags(on: urls, reload: onReload) }
             .disabled(targets.allSatisfy { $0.tagNames.isEmpty })
     }
 }
@@ -399,7 +410,7 @@ func groupedItems(_ items: [FileItem], by grouping: GroupBy) -> [FileGroup] {
         }
         return DateCategory.allCases.compactMap { cat in
             guard let g = buckets[cat], !g.isEmpty else { return nil }
-            return FileGroup(id: "dm-\(cat.rawValue)", title: cat.rawValue, items: g)
+            return FileGroup(id: "dm-\(cat.rawValue)", title: L10n.s(cat.rawValue), items: g)
         }
 
     case .dateCreated:
@@ -410,7 +421,7 @@ func groupedItems(_ items: [FileItem], by grouping: GroupBy) -> [FileGroup] {
         }
         return DateCategory.allCases.compactMap { cat in
             guard let g = buckets[cat], !g.isEmpty else { return nil }
-            return FileGroup(id: "dc-\(cat.rawValue)", title: cat.rawValue, items: g)
+            return FileGroup(id: "dc-\(cat.rawValue)", title: L10n.s(cat.rawValue), items: g)
         }
 
     case .kind:
@@ -418,7 +429,7 @@ func groupedItems(_ items: [FileItem], by grouping: GroupBy) -> [FileGroup] {
         var order: [String] = []
         var buckets: [String: [FileItem]] = [:]
         for item in items {
-            let key = item.kind.isEmpty ? "Unknown" : item.kind
+            let key = item.kind.isEmpty ? L10n.s("Unknown") : item.kind
             if buckets[key] == nil { order.append(key) }
             buckets[key, default: []].append(item)
         }
@@ -430,9 +441,9 @@ func groupedItems(_ items: [FileItem], by grouping: GroupBy) -> [FileGroup] {
         for item in items {
             let key: String
             if item.isBrowsableFolder {
-                key = "Folders"
+                key = L10n.s("Folders")
             } else if item.fileExtension.isEmpty {
-                key = "Other"
+                key = L10n.s("Other")
             } else {
                 key = item.fileExtension.uppercased()
             }
@@ -444,7 +455,7 @@ func groupedItems(_ items: [FileItem], by grouping: GroupBy) -> [FileGroup] {
     case .size:
         return SizeBand.allCases.compactMap { band in
             let g = items.filter { SizeBand.of($0) == band }
-            return g.isEmpty ? nil : FileGroup(id: "sz-\(band.rawValue)", title: band.rawValue, items: g)
+            return g.isEmpty ? nil : FileGroup(id: "sz-\(band.rawValue)", title: L10n.s(band.rawValue), items: g)
         }
 
     case .nameInitial:

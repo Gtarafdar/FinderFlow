@@ -35,6 +35,7 @@ struct QuickActionsToolbar: View {
     let onReload: () -> Void
 
     @State private var apps = InstalledApps()
+    @EnvironmentObject private var locale: LocaleState
 
     private var openTarget: URL { selectedURL ?? currentPath }
 
@@ -42,61 +43,61 @@ struct QuickActionsToolbar: View {
         HStack(spacing: 6) {
 
             // ── Create ────────────────────────────────────────────────────
-            ToolbarActionButton(icon: "folder.badge.plus", label: "New Folder") { onCreateFolder() }
-            ToolbarActionButton(icon: "doc.badge.plus",    label: "New Text File") { onCreateFile() }
+            ToolbarActionButton(icon: "folder.badge.plus", label: L10n.s("New Folder")) { onCreateFolder() }
+            ToolbarActionButton(icon: "doc.badge.plus",    label: L10n.s("New Text File")) { onCreateFile() }
 
             Divider().frame(height: 20)
 
             // ── Undo / Redo ───────────────────────────────────────────────
-            ToolbarActionButton(icon: "arrow.uturn.backward", label: "Undo") { fileOps.undo() }
+            ToolbarActionButton(icon: "arrow.uturn.backward", label: L10n.s("Undo")) { fileOps.undo() }
                 .disabled(!fileOps.canUndo)
-            ToolbarActionButton(icon: "arrow.uturn.forward", label: "Redo") { fileOps.redo() }
+            ToolbarActionButton(icon: "arrow.uturn.forward", label: L10n.s("Redo")) { fileOps.redo() }
                 .disabled(!fileOps.canRedo)
 
             Divider().frame(height: 20)
 
             // ── Paste / Copy Path ─────────────────────────────────────────
-            ToolbarActionButton(icon: "doc.on.clipboard", label: "Paste") {
+            ToolbarActionButton(icon: "doc.on.clipboard", label: L10n.s("Paste")) {
                 fileOps.paste(to: currentPath, reload: onReload)
             }
             .disabled(fileOps.pasteboardURLs.isEmpty)
 
-            ToolbarActionButton(icon: "doc.on.clipboard.fill", label: "Copy Path") {
+            ToolbarActionButton(icon: "doc.on.clipboard.fill", label: L10n.s("Copy Path")) {
                 fileOps.copyPath(currentPath.path)
             }
 
             // ── Delete ────────────────────────────────────────────────────
-            ToolbarActionButton(icon: "trash", label: "Delete Permanently…") { onDelete() }
+            ToolbarActionButton(icon: "trash", label: L10n.s("Delete Permanently…")) { onDelete() }
                 .disabled(selectedCount == 0)
 
             Divider().frame(height: 20)
 
             // ── Terminal (always visible) ─────────────────────────────────
-            ToolbarActionButton(icon: "terminal", label: "Open Terminal") {
+            ToolbarActionButton(icon: "terminal", label: L10n.s("Open Terminal")) {
                 openInTerminal(openTarget)
             }
 
             // ── IDEs: only shown when detected ────────────────────────────
             if let icon = apps.vscode {
-                AppIconToolbarButton(appIcon: icon, label: "Open in VS Code") {
+                AppIconToolbarButton(appIcon: icon, label: L10n.s("Open in VS Code")) {
                     openInVSCode(openTarget)
                 }
             }
 
             if let icon = apps.claude {
-                AppIconToolbarButton(appIcon: icon, label: "Open in Claude Code (opens Terminal)") {
+                AppIconToolbarButton(appIcon: icon, label: L10n.s("Open in Claude Code (opens Terminal)")) {
                     openInClaudeCode(openTarget)
                 }
             }
 
             if let icon = apps.cursor {
-                AppIconToolbarButton(appIcon: icon, label: "Open in Cursor") {
+                AppIconToolbarButton(appIcon: icon, label: L10n.s("Open in Cursor")) {
                     openInCursor(openTarget)
                 }
             }
 
             if let icon = apps.codex {
-                AppIconToolbarButton(appIcon: icon, label: "Open in Codex") {
+                AppIconToolbarButton(appIcon: icon, label: L10n.s("Open in Codex")) {
                     openInCodex(openTarget)
                 }
             }
@@ -105,14 +106,14 @@ struct QuickActionsToolbar: View {
 
             // ── Toggles ───────────────────────────────────────────────────
             Toggle(isOn: $showHidden) {
-                Label("Hidden Files", systemImage: showHidden ? "eye" : "eye.slash")
+                Label(L10n.s("Hidden Files"), systemImage: showHidden ? "eye" : "eye.slash")
                     .labelStyle(.iconOnly)
             }
             .toggleStyle(.button).buttonStyle(.borderless)
-            .help(showHidden ? "Hide hidden files" : "Show hidden files")
+            .help(L10n.s(showHidden ? "Hide hidden files" : "Show hidden files"))
 
             Menu {
-                Picker("Group By", selection: $groupBy) {
+                Picker(L10n.s("Group By"), selection: $groupBy) {
                     ForEach(GroupBy.allCases) { g in
                         Text(g.menuTitle).tag(g)
                     }
@@ -124,31 +125,31 @@ struct QuickActionsToolbar: View {
             }
             .menuStyle(.borderlessButton)
             .frame(width: 28)
-            .help(groupBy == .none ? "Group By" : "Grouped by \(groupBy.menuTitle)")
+            .help(groupBy == .none ? L10n.s("Group By") : L10n.sf("Grouped by %@", L10n.s(groupBy.menuTitle)))
 
             Toggle(isOn: $showPreview) {
-                Label("File Preview", systemImage: showPreview ? "doc.richtext.fill" : "doc.richtext")
+                Label(L10n.s("File Preview"), systemImage: showPreview ? "doc.richtext.fill" : "doc.richtext")
                     .labelStyle(.iconOnly)
             }
             .toggleStyle(.button).buttonStyle(.borderless)
-            .help(showPreview ? "Hide preview panel" : "Show file preview panel")
+            .help(L10n.s(showPreview ? "Hide preview panel" : "Show file preview panel"))
 
             if viewMode == .columns {
                 Toggle(isOn: $showColumnTree) {
-                    Label("Show Tree", systemImage: showColumnTree ? "sidebar.left" : "rectangle.split.1x2")
+                    Label(L10n.s("Show Tree"), systemImage: showColumnTree ? "sidebar.left" : "rectangle.split.1x2")
                         .labelStyle(.iconOnly)
                 }
                 .toggleStyle(.button).buttonStyle(.borderless)
-                .help(showColumnTree ? "Hide folder tree — show current folder only"
-                                     : "Show full folder tree from root")
+                .help(L10n.s(showColumnTree ? "Hide folder tree — show current folder only"
+                                     : "Show full folder tree from root"))
             }
 
-            ToolbarActionButton(icon: "arrow.clockwise", label: "Refresh") { onReload() }
+            ToolbarActionButton(icon: "arrow.clockwise", label: L10n.s("Refresh")) { onReload() }
 
             Divider().frame(height: 20)
 
             // ── Go Up ─────────────────────────────────────────────────────
-            ToolbarActionButton(icon: "arrow.up", label: "Go Up") {
+            ToolbarActionButton(icon: "arrow.up", label: L10n.s("Go Up")) {
                 let p = currentPath.deletingLastPathComponent()
                 if p != currentPath { currentPath = p }
             }
@@ -157,21 +158,21 @@ struct QuickActionsToolbar: View {
 
             // ── Sort / folder order ───────────────────────────────────────
             HStack(spacing: 2) {
-                Picker("Sort", selection: $sortField) {
-                    ForEach(SortField.allCases) { f in Text(f.rawValue).tag(f) }
+                Picker(L10n.s("Sort by"), selection: $sortField) {
+                    ForEach(SortField.allCases) { f in Text(L10n.s(f.rawValue)).tag(f) }
                 }
-                .pickerStyle(.menu).frame(maxWidth: 138).help("Sort by")
+                .pickerStyle(.menu).frame(maxWidth: 138).help(L10n.s("Sort by"))
 
                 Button { sortAscending.toggle() } label: {
                     Image(systemName: sortAscending ? "arrow.up" : "arrow.down").font(.caption)
                 }
                 .buttonStyle(.borderless)
-                .help(sortAscending ? "Ascending" : "Descending")
+                .help(L10n.s(sortAscending ? "Ascending" : "Descending"))
 
                 Menu {
-                    Picker("Folders", selection: $folderOrder) {
+                    Picker(L10n.s("Folders"), selection: $folderOrder) {
                         ForEach(FolderOrder.allCases) { o in
-                            Text(o.rawValue).tag(o)
+                            Text(L10n.s(o.rawValue)).tag(o)
                         }
                     }
                 } label: {
@@ -181,7 +182,7 @@ struct QuickActionsToolbar: View {
                 }
                 .menuStyle(.borderlessButton)
                 .frame(width: 28)
-                .help("Folder / file order: \(folderOrder.rawValue)")
+                .help(L10n.sf("Folder / file order: %@", L10n.s(folderOrder.rawValue)))
             }
 
             Divider().frame(height: 20)
@@ -192,7 +193,7 @@ struct QuickActionsToolbar: View {
                     Image(systemName: mode.icon).tag(mode)
                 }
             }
-            .pickerStyle(.segmented).frame(width: 96).help("Switch view")
+            .pickerStyle(.segmented).frame(width: 96).help(L10n.s("Switch view"))
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)

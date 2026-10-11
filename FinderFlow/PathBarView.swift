@@ -2,6 +2,7 @@ import SwiftUI
 import AppKit
 
 struct PathBarView: View {
+    @EnvironmentObject private var locale: LocaleState
     @Binding var currentPath: URL
     @State private var isEditing = false
     @State private var editText = ""
@@ -13,7 +14,7 @@ struct PathBarView: View {
                 .font(.caption)
 
             if isEditing {
-                TextField("Path", text: $editText)
+                TextField(L10n.s("Path"), text: $editText)
                     .textFieldStyle(.plain)
                     .font(.system(size: 12, design: .monospaced))
                     .resetsCursorOnExit()
@@ -29,7 +30,7 @@ struct PathBarView: View {
                 Image(systemName: "doc.on.clipboard")
             }
             .buttonStyle(.borderless)
-            .help("Copy full path")
+            .help(L10n.s("Copy full path"))
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)

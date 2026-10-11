@@ -1,13 +1,14 @@
 import SwiftUI
 
 struct StatusBarView: View {
+    @EnvironmentObject private var locale: LocaleState
     let files: [FileItem]
     let selectedIDs: Set<String>
     let currentPath: URL
 
     var body: some View {
         HStack(spacing: 16) {
-            Text(itemCountText)
+            Text(L10n.itemsLabel(files.count))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
 
@@ -20,7 +21,7 @@ struct StatusBarView: View {
             Spacer()
 
             if let free = freeDiskSpace {
-                Text("\(free) available")
+                Text(L10n.sf("%@ available", free))
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
@@ -31,16 +32,12 @@ struct StatusBarView: View {
         .overlay(alignment: .top) { Divider() }
     }
 
-    private var itemCountText: String {
-        "\(files.count) \(files.count == 1 ? "item" : "items")"
-    }
-
     private var selectionText: String {
         let sel = files.filter { selectedIDs.contains($0.id) }
         let totalBytes = sel.filter { !$0.isDirectory }.reduce(0) { $0 + $1.size }
-        let countStr = "\(sel.count) selected"
+        let countStr = L10n.selectionLabel(sel.count)
         guard totalBytes > 0 else { return countStr }
-        return "\(countStr) — \(ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file))"
+        return countStr + " — " + ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file)
     }
 
     private var freeDiskSpace: String? {

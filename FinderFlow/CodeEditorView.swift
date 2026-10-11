@@ -159,7 +159,7 @@ final class AceEditorController: NSObject, ObservableObject, WKScriptMessageHand
     var activeDoc: OpenDoc? { docs.first { $0.id == activeID } }
 
     private var currentTitle: String {
-        guard let d = activeDoc else { return "Editor" }
+        guard let d = activeDoc else { return L10n.s("Editor") }
         return (d.modified ? "• " : "") + d.url.lastPathComponent
     }
 
@@ -256,9 +256,9 @@ final class AceEditorController: NSObject, ObservableObject, WKScriptMessageHand
         do {
             try content.write(to: doc.url, atomically: true, encoding: .utf8)
             setModified(id, false)
-            flash("Saved \(doc.url.lastPathComponent)")
+            flash(L10n.sf("Saved %@", doc.url.lastPathComponent))
         } catch {
-            flash("Save failed")
+            flash(L10n.s("Save failed"))
         }
     }
 
@@ -335,6 +335,7 @@ struct CodeEditorView: View {
     @AppStorage("ffEditorFontSize")    private var fontSize    = 14
     @AppStorage("ffEditorSublimeKeys") private var sublimeKeys = false
     @AppStorage("ffEditorMinimap")     private var minimap     = true
+    @EnvironmentObject private var locale: LocaleState
 
     init(controller: AceEditorController) { self.ctrl = controller }
 
@@ -391,29 +392,29 @@ struct CodeEditorView: View {
                 Image(systemName: minimap ? "rectangle.righthalf.inset.filled" : "rectangle.righthalf.inset.filled")
                     .foregroundStyle(minimap ? Color.accentColor : Color.secondary)
             }
-            .buttonStyle(.borderless).help(minimap ? "Minimap: on  ⌘⇧M" : "Minimap: off  ⌘⇧M")
+            .buttonStyle(.borderless).help(L10n.s(minimap ? "Minimap: on  ⌘⇧M" : "Minimap: off  ⌘⇧M"))
 
             Menu {
-                Button("Settings…")     { ctrl.settings() }
+                Button(L10n.s("Settings…"))     { ctrl.settings() }
                 Divider()
-                Button("Increase Font") { ctrl.setFontSize(fontSize + 1); fontSize = ctrl.fontSize }
-                Button("Decrease Font") { ctrl.setFontSize(fontSize - 1); fontSize = ctrl.fontSize }
+                Button(L10n.s("Increase Font")) { ctrl.setFontSize(fontSize + 1); fontSize = ctrl.fontSize }
+                Button(L10n.s("Decrease Font")) { ctrl.setFontSize(fontSize - 1); fontSize = ctrl.fontSize }
                 Divider()
-                Toggle("Sublime Keybindings", isOn: Binding(
+                Toggle(L10n.s("Sublime Keybindings"), isOn: Binding(
                     get: { sublimeKeys },
                     set: { _ in ctrl.toggleSublime(); sublimeKeys = ctrl.sublimeKeys }
                 ))
             } label: {
                 Image(systemName: "textformat.size")
             }
-            .menuStyle(.borderlessButton).frame(width: 34).help("Editor options")
+            .menuStyle(.borderlessButton).frame(width: 34).help(L10n.s("Editor options"))
 
             Button(action: { ctrl.saveActive() }) {
                 Image(systemName: "square.and.arrow.down")
             }
             .buttonStyle(.borderless)
             .disabled(ctrl.activeDoc?.modified != true)
-            .help("Save  ⌘S")
+            .help(L10n.s("Save  ⌘S"))
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
@@ -444,7 +445,7 @@ struct CodeEditorView: View {
                 Image(systemName: "xmark").font(.system(size: 9, weight: .bold))
             }
             .buttonStyle(.borderless)
-            .help("Close Tab  ⌘W")
+            .help(L10n.s("Close Tab  ⌘W"))
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)

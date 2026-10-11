@@ -12,6 +12,7 @@ struct IconsView: View {
     @ObservedObject var favorites: FavoritesService
 
     @State private var iconSize: CGFloat = 64
+    @EnvironmentObject private var locale: LocaleState
 
     private var columns: [GridItem] {
         [GridItem(.adaptive(minimum: iconSize + 20, maximum: iconSize + 40), spacing: 8)]
@@ -75,66 +76,66 @@ struct IconsView: View {
         let targets = sel.isEmpty ? [item] : sel
         let urls    = targets.map(\.url)
 
-        Button("Open") { onNavigate(item) }
+        Button(L10n.s("Open")) { onNavigate(item) }
         if item.isBrowsableFolder {
-            Button("Open in New Window") { NSWorkspace.shared.open(item.url) }
+            Button(L10n.s("Open in New Window")) { NSWorkspace.shared.open(item.url) }
         } else if item.isPackage {
-            Button("Show Package Contents") { onBrowseInto(item.url) }
+            Button(L10n.s("Show Package Contents")) { onBrowseInto(item.url) }
         }
         Divider()
-        Button("Quick Look") { QuickLookController.shared.show(urls) }
-        Button("Get Info")   { showGetInfo(for: targets) }
+        Button(L10n.s("Quick Look")) { QuickLookController.shared.show(urls) }
+        Button(L10n.s("Get Info"))   { showGetInfo(for: targets) }
         Divider()
-        Button("Rename…")  { promptRename(item: item) }
-        Button(targets.count > 1 ? "Duplicate \(targets.count) Items" : "Duplicate") {
+        Button(L10n.s("Rename…"))  { promptRename(item: item) }
+        Button(targets.count > 1 ? L10n.sf("Duplicate %d Items", targets.count) : L10n.s("Duplicate")) {
             fileOps.duplicate(urls, reload: onReload)
         }
-        Button(targets.count > 1 ? "Make \(targets.count) Aliases" : "Make Alias") {
+        Button(targets.count > 1 ? L10n.sf("Make %d Aliases", targets.count) : L10n.s("Make Alias")) {
             urls.forEach { fileOps.makeAlias(for: $0, reload: onReload) }
         }
-        Button(targets.count > 1 ? "Compress \(targets.count) Items" : "Compress \"\(item.name)\"") {
+        Button(targets.count > 1 ? L10n.sf("Compress %d Items", targets.count) : L10n.sf("Compress \"%\"", item.name)) {
             fileOps.compress(urls, reload: onReload)
         }
         if targets.count == 1 && item.isArchive {
-            Button("Extract Here") { fileOps.extract(item.url, reload: onReload) }
+            Button(L10n.s("Extract Here")) { fileOps.extract(item.url, reload: onReload) }
         }
         Divider()
-        Button("Cut")   { fileOps.cut(urls) }
-        Button("Copy")  { fileOps.copy(urls) }
-        Button("Paste") {
+        Button(L10n.s("Cut"))   { fileOps.cut(urls) }
+        Button(L10n.s("Copy"))  { fileOps.copy(urls) }
+        Button(L10n.s("Paste")) {
             let dest = (targets.count == 1 && item.isDirectory) ? item.url : currentPath
             fileOps.paste(to: dest, reload: onReload)
         }
         .disabled(fileOps.pasteboardURLs.isEmpty)
         Divider()
-        Menu("Share") {
-            Button("AirDrop") { fileOps.shareViaAirDrop(urls) }
+        Menu(L10n.s("Share")) {
+            Button(L10n.s("AirDrop")) { fileOps.shareViaAirDrop(urls) }
             Divider()
-            Button("Share…") { fileOps.showShareSheet(for: urls) }
+            Button(L10n.s("Share…")) { fileOps.showShareSheet(for: urls) }
         }
         Divider()
-        Menu("Tags") {
+        Menu(L10n.s("Tags")) {
             TagMenuContent(targets: targets, fileOps: fileOps, onReload: onReload)
         }
         Divider()
         if item.isBrowsableFolder {
             if favorites.isPinned(item.url) {
-                Button("Remove from Sidebar") { favorites.unpin(item.url) }
+                Button(L10n.s("Remove from Sidebar")) { favorites.unpin(item.url) }
             } else {
-                Button("Add to Sidebar") { favorites.pin(item.url) }
+                Button(L10n.s("Add to Sidebar")) { favorites.pin(item.url) }
             }
         }
-        Button("Show in Finder") {
+        Button(L10n.s("Show in Finder")) {
             NSWorkspace.shared.selectFile(item.url.path, inFileViewerRootedAtPath: "")
         }
-        Button(targets.count > 1 ? "Copy \(targets.count) Paths" : "Copy Path") {
+        Button(targets.count > 1 ? L10n.sf("Copy %d Paths", targets.count) : L10n.s("Copy Path")) {
             fileOps.copyPath(urls.map(\.path).joined(separator: "\n"))
         }
         Divider()
-        Button("Move to Trash", role: .destructive) {
+        Button(L10n.s("Move to Trash"), role: .destructive) {
             fileOps.trash(urls, reload: onReload)
         }
-        Button("Delete Permanently…", role: .destructive) {
+        Button(L10n.s("Delete Permanently…"), role: .destructive) {
             confirmPermanentDelete(names: targets.map(\.name)) {
                 fileOps.permanentlyDelete(urls, reload: onReload)
             }
@@ -149,10 +150,10 @@ struct IconsView: View {
 
     private func promptRename(item: FileItem) {
         let alert = NSAlert()
-        alert.messageText     = "Rename \"\(item.name)\""
-        alert.informativeText = "Enter a new name:"
-        alert.addButton(withTitle: "Rename")
-        alert.addButton(withTitle: "Cancel")
+        alert.messageText     = L10n.sf("Rename \"%\"", item.name)
+        alert.informativeText = L10n.s("Enter a new name:")
+        alert.addButton(withTitle: L10n.s("Rename"))
+        alert.addButton(withTitle: L10n.s("Cancel"))
         let tf = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
         tf.stringValue = item.name; tf.selectText(nil)
         alert.accessoryView = tf

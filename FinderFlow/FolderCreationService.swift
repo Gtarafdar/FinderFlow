@@ -5,14 +5,15 @@ import Darwin
 // MARK: - Permanent delete confirmation (shared across all views)
 
 func confirmPermanentDelete(names: [String], onConfirm: @escaping () -> Void) {
-    let label = names.count == 1 ? "\"\(names[0])\"" : "\(names.count) items"
+    let label = names.count == 1 ? "\"\(names[0])\"" : L10n.itemsLabel(names.count)
     let alert = NSAlert()
-    alert.messageText     = "Permanently delete \(label)?"
-    alert.informativeText = "This cannot be undone. \(names.count == 1 ? "The item" : "The items") will be permanently deleted and cannot be recovered."
+    alert.messageText     = L10n.sf("Permanently delete %@?", label)
+    alert.informativeText = L10n.sf("This cannot be undone. %@ will be permanently deleted and cannot be recovered.",
+                                    L10n.s(names.count == 1 ? "The item" : "The items"))
     alert.alertStyle      = .warning
-    let deleteBtn = alert.addButton(withTitle: "Delete Permanently")
+    let deleteBtn = alert.addButton(withTitle: L10n.s("Delete Permanently"))
     deleteBtn.hasDestructiveAction = true
-    alert.addButton(withTitle: "Cancel")
+    alert.addButton(withTitle: L10n.s("Cancel"))
     if alert.runModal() == .alertFirstButtonReturn { onConfirm() }
 }
 
@@ -68,7 +69,7 @@ class FolderCreationService: ObservableObject {
             DispatchQueue.main.async {
                 self.lastActionFeedback = ActionFeedback(
                     icon: "folder.badge.plus",
-                    message: "Created \"\(target.lastPathComponent)\""
+                    message: L10n.sf("Created \"%@\"", target.lastPathComponent)
                 )
                 self.lastCreatedURL = target
             }
@@ -81,14 +82,14 @@ class FolderCreationService: ObservableObject {
         let target = uniqueURL(for: path.appendingPathComponent(name))
         guard FileManager.default.createFile(atPath: target.path, contents: nil) else {
             DispatchQueue.main.async {
-                self.errorMessage = "Could not create file at \(target.path)"
+                self.errorMessage = L10n.sf("Could not create file at %@", target.path)
             }
             return
         }
         DispatchQueue.main.async {
             self.lastActionFeedback = ActionFeedback(
                 icon: "doc.badge.plus",
-                message: "Created \"\(target.lastPathComponent)\""
+                message: L10n.sf("Created \"%@\"", target.lastPathComponent)
             )
             self.lastCreatedURL = target
         }
@@ -127,15 +128,15 @@ class FileOperationsService: ObservableObject {
     func copy(_ urls: [URL]) {
         clipboardURLs = urls; isCut = false
         writeToPasteboard(urls)
-        let label = urls.count == 1 ? "\"\(urls[0].lastPathComponent)\"" : "\(urls.count) items"
-        lastActionFeedback = ActionFeedback(icon: "doc.on.doc", message: "Copied \(label)")
+        lastActionFeedback = ActionFeedback(icon: "doc.on.doc",
+                                            message: L10n.sf("Copied %@", L10n.actionLabel(urls.map(\.lastPathComponent))))
     }
 
     func cut(_ urls: [URL]) {
         clipboardURLs = urls; isCut = true
         writeToPasteboard(urls)
-        let label = urls.count == 1 ? "\"\(urls[0].lastPathComponent)\"" : "\(urls.count) items"
-        lastActionFeedback = ActionFeedback(icon: "scissors", message: "Cut \(label)")
+        lastActionFeedback = ActionFeedback(icon: "scissors",
+                                            message: L10n.sf("Cut %@", L10n.actionLabel(urls.map(\.lastPathComponent))))
     }
 
     private func writeToPasteboard(_ urls: [URL]) {
@@ -196,12 +197,12 @@ class FileOperationsService: ObservableObject {
         undoMgr.setActionName(wasCut ? "Move" : "Paste")
         objectWillChange.send()
 
-        let count = pasted.count
-        let label = count == 1 ? "\"\(pasted[0].lastPathComponent)\"" : "\(count) items"
+        let names = pasted.map(\.lastPathComponent)
         DispatchQueue.main.async {
             self.lastActionFeedback = ActionFeedback(
                 icon: "doc.on.clipboard",
-                message: (wasCut ? "Moved " : "Pasted ") + label
+                message: L10n.sf(wasCut ? "Moved %@" : "Pasted %@",
+                                 L10n.actionLabel(names))
             )
             self.lastOpURL = pasted.first
             reload()
@@ -223,7 +224,7 @@ class FileOperationsService: ObservableObject {
             DispatchQueue.main.async {
                 self.lastActionFeedback = ActionFeedback(
                     icon: "pencil",
-                    message: "Renamed to \"\(newName)\""
+                    message: L10n.sf("Renamed to %@", "\"\(newName)\"")
                 )
                 self.lastOpURL = newURL
                 reload()
@@ -256,10 +257,10 @@ class FileOperationsService: ObservableObject {
         }
         undoMgr.setActionName("Duplicate")
         objectWillChange.send()
-        let count = created.count
-        let label = count == 1 ? "\"\(created[0].lastPathComponent)\"" : "\(count) items"
+        let names = created.map(\.lastPathComponent)
         DispatchQueue.main.async {
-            self.lastActionFeedback = ActionFeedback(icon: "plus.square.on.square", message: "Duplicated \(label)")
+            self.lastActionFeedback = ActionFeedback(icon: "plus.square.on.square",
+                message: L10n.sf("Duplicated %@", L10n.actionLabel(names)))
             self.lastOpURL = created.first
             reload()
         }
@@ -285,10 +286,10 @@ class FileOperationsService: ObservableObject {
         }
         undoMgr.setActionName("Move to Trash")
         objectWillChange.send()
-        let count = pairs.count
-        let label = count == 1 ? "\"\(pairs[0].orig.lastPathComponent)\"" : "\(count) items"
+        let names = pairs.map { $0.orig.lastPathComponent }
         DispatchQueue.main.async {
-            self.lastActionFeedback = ActionFeedback(icon: "trash", message: "Trashed \(label)")
+            self.lastActionFeedback = ActionFeedback(icon: "trash",
+                message: L10n.sf("Trashed %@", L10n.actionLabel(names)))
             reload()
         }
     }
@@ -298,7 +299,7 @@ class FileOperationsService: ObservableObject {
     func extract(_ url: URL, reload: @escaping () -> Void) {
         let dest = url.deletingLastPathComponent()
         guard archiveKind(for: url) != nil else {
-            errorMessage = "FinderFlow can't extract this file type."
+            errorMessage = L10n.s("FinderFlow can't extract this file type.")
             return
         }
 
@@ -306,10 +307,10 @@ class FileOperationsService: ObservableObject {
             do {
                 let entries = try self.listArchiveEntries(url)
                 guard !entries.isEmpty else {
-                    throw ArchiveToolError(message: "This archive is empty.")
+                    throw ArchiveToolError(message: L10n.s("This archive is empty."))
                 }
                 guard entries.allSatisfy(archiveEntryIsSafe) else {
-                    throw ArchiveToolError(message: "This archive can't be extracted because it contains an unsafe path.")
+                    throw ArchiveToolError(message: L10n.s("This archive can't be extracted because it contains an unsafe path."))
                 }
                 let top = archiveTopLevelNames(entries)
                 let collisions = top.filter {
@@ -343,7 +344,7 @@ class FileOperationsService: ObservableObject {
             : "Archive.zip"
         let dest = uniqueURL(for: base.appendingPathComponent(zipName))
         guard let arguments = zipArguments(archivePath: dest.path, names: names) else {
-            errorMessage = "One of these items can't be compressed because its name isn't allowed."
+            errorMessage = L10n.s("One of these items can't be compressed because its name isn't allowed.")
             return
         }
         DispatchQueue.global(qos: .userInitiated).async {
@@ -395,7 +396,7 @@ class FileOperationsService: ObservableObject {
             DispatchQueue.main.async {
                 self.lastActionFeedback = ActionFeedback(
                     icon:    allHave ? "tag.slash" : "tag.fill",
-                    message: allHave ? "Removed \(canonical) tag" : "Tagged \(canonical)"
+                    message: allHave ? L10n.sf("Removed %@ tag", canonical) : L10n.sf("Tagged %@", canonical)
                 )
                 reload()
             }
@@ -408,7 +409,7 @@ class FileOperationsService: ObservableObject {
         DispatchQueue.global(qos: .userInitiated).async {
             for url in urls { self.writeTags([], to: url) }
             DispatchQueue.main.async {
-                self.lastActionFeedback = ActionFeedback(icon: "tag.slash", message: "Cleared tags")
+                self.lastActionFeedback = ActionFeedback(icon: "tag.slash", message: L10n.s("Cleared tags"))
                 reload()
             }
         }
@@ -473,10 +474,10 @@ class FileOperationsService: ObservableObject {
             }
         }
         guard !deleted.isEmpty else { return }
-        let count = deleted.count
-        let label = count == 1 ? "\"\(deleted[0].lastPathComponent)\"" : "\(count) items"
+        let names = deleted.map(\.lastPathComponent)
         DispatchQueue.main.async {
-            self.lastActionFeedback = ActionFeedback(icon: "trash.fill", message: "Permanently deleted \(label)")
+            self.lastActionFeedback = ActionFeedback(icon: "trash.fill",
+                message: L10n.sf("Permanently deleted %@", L10n.actionLabel(names)))
             reload()
         }
     }
@@ -487,7 +488,7 @@ class FileOperationsService: ObservableObject {
         let name = undoMgr.undoActionName
         undoMgr.undo()
         objectWillChange.send()
-        let msg = name.isEmpty ? "Undone" : "Undone: \(name)"
+        let msg = name.isEmpty ? L10n.s("Undone") : L10n.sf("Undone: %@", L10n.s(name))
         lastActionFeedback = ActionFeedback(icon: "arrow.uturn.backward", message: msg)
     }
 
@@ -495,7 +496,7 @@ class FileOperationsService: ObservableObject {
         let name = undoMgr.redoActionName
         undoMgr.redo()
         objectWillChange.send()
-        let msg = name.isEmpty ? "Redone" : "Redone: \(name)"
+        let msg = name.isEmpty ? L10n.s("Redone") : L10n.sf("Redone: %@", L10n.s(name))
         lastActionFeedback = ActionFeedback(icon: "arrow.uturn.forward", message: msg)
     }
 
@@ -541,12 +542,12 @@ class FileOperationsService: ObservableObject {
 
     private func confirmExtractOverwrite(_ names: [String]) -> Bool {
         let alert = NSAlert()
-        let label = names.count == 1 ? "\"\(names[0])\"" : "\(names.count) items"
-        alert.messageText = "Replace existing \(label)?"
-        alert.informativeText = "Extracting will replace items already in this folder. This cannot be undone."
+        let label = L10n.actionLabel(names)
+        alert.messageText = L10n.sf("Replace existing %@?", label)
+        alert.informativeText = L10n.s("Extracting will replace items already in this folder. This cannot be undone.")
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "Replace")
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: L10n.s("Replace"))
+        alert.addButton(withTitle: L10n.s("Cancel"))
         return alert.runModal() == .alertFirstButtonReturn
     }
 
@@ -580,7 +581,7 @@ class FileOperationsService: ObservableObject {
         }
 
         if try treeContainsEscapingSymlink(temp) {
-            throw ArchiveToolError(message: "This archive can't be extracted because it contains a link that points outside the archive.")
+            throw ArchiveToolError(message: L10n.s("This archive can't be extracted because it contains a link that points outside the archive."))
         }
         copyQuarantine(from: url, onto: temp)
 
@@ -590,7 +591,7 @@ class FileOperationsService: ObservableObject {
             let target = dest.appendingPathComponent(name)
             if fm.fileExists(atPath: target.path) {
                 guard allowed.contains(name) else {
-                    throw ArchiveToolError(message: "Couldn't extract because \"\(name)\" already exists.")
+                    throw ArchiveToolError(message: L10n.sf("Couldn't extract because \"%@\" already exists.", name))
                 }
                 try fm.removeItem(at: target)
             }
@@ -678,7 +679,7 @@ class FileOperationsService: ObservableObject {
         let errorText = String(decoding: errData, as: UTF8.self)
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard process.terminationStatus == 0 else {
-            throw ArchiveToolError(message: errorText.isEmpty ? "Couldn't read this archive." : errorText)
+            throw ArchiveToolError(message: errorText.isEmpty ? L10n.s("Couldn't read this archive.") : errorText)
         }
         return output
     }
